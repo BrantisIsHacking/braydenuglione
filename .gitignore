@@ -1,0 +1,12 @@
+_source/
+node_modules/
+dist/
+.env
+.env.*
+*.mp4
+test-results/
+playwright-report/
+.wrangler/
+.superpowers/
+*.local
+*.tsbuildinfo

@@ -1,0 +1,11 @@
+:root {
+  --scarlet: #cc0033;
+  --ink: #0a0a0a;
+  --paper: #ffffff;
+  --muted: #9a9a9a;
+  --line: #2a2a2a;
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+}

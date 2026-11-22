@@ -1,0 +1,53 @@
+import type { Banner } from './types';
+
+export const banners: Banner[] = [
+  {
+    id: 'critics-choice-prize',
+    title: "Critic's Choice Prize",
+    issuer: 'Rutgers Honors College',
+    year: '2025',
+    why: 'Our documentary on homelessness and gentrification in New Brunswick was the top project in the class.',
+  },
+  {
+    id: 'best-code-tech',
+    title: 'Best Use of Code & Technology',
+    issuer: 'NASA Space Apps NYC',
+    year: '2026',
+    why: 'For Tranquility Base, our team of four\'s 3D lunar landing site navigator.',
+  },
+  {
+    id: 'best-gemini',
+    title: 'Best Use of Gemini',
+    issuer: 'NASA Space Apps NYC',
+    year: '2026',
+    why: 'The Gemini copilot in Tranquility Base, which I sped up from 96 seconds to 2.',
+  },
+  {
+    id: 'bloodiest-game',
+    title: 'Bloodiest Game',
+    issuer: 'NSLC at UCLA',
+    year: '2024',
+    why: 'Our team won the best horror game award at the game design program.',
+  },
+  {
+    id: 'academy-scholar',
+    title: 'Academy Scholar',
+    issuer: 'Morris County School of Technology',
+    year: '2024',
+    why: "Named the top-performing student in my high school's Academy for Computer & Information Sciences.",
+  },
+  {
+    id: 'rising-star',
+    title: 'Rising Star Award',
+    issuer: 'Morris Tech Basketball',
+    year: '2023',
+    why: 'Recognized for my performance and potential on the court.',
+  },
+  {
+    id: 'honor-societies',
+    title: 'NHS · NTHS · NSHSS',
+    issuer: 'National honor societies',
+    year: '2024',
+    why: "Member of the National Honor Society, National Technical Honor Society, and National Society of High School Scholars.",
+  },
+];

@@ -1,0 +1,47 @@
+export type Zone = 'projects' | 'now' | 'rutgers' | 'bridge' | 'bench' | 'throwback';
+export type Category = 'project' | 'experience' | 'leadership' | 'education' | 'throwback';
+export type Link = { label: string; url: string };
+export type Media = { src: string; alt: string; width?: number; height?: number };
+export type TerminalRow = { label: string; value: string };
+export type Station = {
+  id: string;
+  zone: Zone;
+  category: Category;
+  kind: 'standard' | 'terminal' | 'video';
+  title: string;
+  org: string;
+  role: string | null;
+  start: string;
+  end: string;
+  oneLiner: string;
+  body: string;
+  bullets: string[];
+  stat: { value: string; label: string } | null;
+  tech: string[];
+  links: Link[];
+  media: Media[];
+  credits?: string;
+  terminal?: { command: string; rows: TerminalRow[]; note?: string };
+  video?: { youtubeId: string; poster: Media };
+  shotCaption: string;
+  pos: [number, number];
+};
+export type Banner = { id: string; title: string; issuer: string; year: string; why: string };
+export type LockerItem = {
+  id: string;
+  title: string;
+  oneLiner: string;
+  detail?: string;
+  link?: Link;
+  shotCaption: string;
+};
+export type Profile = {
+  name: string;
+  intro: string;
+  tagline: string;
+  email: string;
+  school: string;
+  links: Link[];
+  targets: string;
+  jersey: number;
+};

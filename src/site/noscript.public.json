@@ -1,0 +1,10 @@
+{
+  "name": "Brayden Uglione",
+  "intro": "I'm Brayden Uglione, studying CS and Data Science with Math and Stats minors at Rutgers Honors College. I enjoy building software and taking broken systems and making them work reliably.",
+  "email": "uglionebrayden@gmail.com",
+  "links": [
+    { "label": "GitHub", "url": "https://github.com/BrantisIsHacking" },
+    { "label": "LinkedIn", "url": "https://www.linkedin.com/in/brayden-uglione/" },
+    { "label": "Devpost", "url": "https://devpost.com/brantisu5" }
+  ]
+}
