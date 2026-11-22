@@ -32,7 +32,7 @@ export const stations: Station[] = [
     ],
     credits: 'Built with Rohan Sharma, Tanish Banota, and Hasan Ali',
     shotCaption: 'Nothing but net — 60 fps.',
-    pos: [0, 0],
+    pos: [5.7, 0],
   },
   {
     id: 'dreams-come-true',
@@ -65,7 +65,7 @@ export const stations: Station[] = [
       { src: '/media/dreams-come-true/generated-book.webp', width: 1600, height: 1016, alt: "A finished DreamsComeTrue picture book page showing a boy finding a glowing golden key in the rain." },
     ],
     shotCaption: 'Buzzer-beater at hour 36.',
-    pos: [0, 0],
+    pos: [6.9, 3.9],
   },
   {
     id: 'debate-mate',
@@ -98,7 +98,7 @@ export const stations: Station[] = [
       { src: '/media/debate-mate/how-it-works.webp', width: 806, height: 405, alt: 'DebateMate how-it-works page explaining the debate and scoring flow.' },
     ],
     shotCaption: 'Pick a side, then fast-break the argument.',
-    pos: [0, 0],
+    pos: [6.9, -3.9],
   },
   {
     id: 'zayi-ai-studio',
@@ -132,7 +132,7 @@ export const stations: Station[] = [
       note: 'Team results from our pipeline. The code is internal to Zayi, so there is no public repo.',
     },
     shotCaption: 'Thirty-eight of forty from the field.',
-    pos: [0, 0],
+    pos: [10.1, 6.3],
   },
   {
     id: 'airbnb-classifier',
@@ -165,7 +165,7 @@ export const stations: Station[] = [
       ],
     },
     shotCaption: 'Two models, one scoreboard.',
-    pos: [0, 0],
+    pos: [10.1, -6.3],
   },
   {
     id: 'zayi-fellow',
@@ -189,7 +189,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Made the cut from 4,000+ tryouts.',
-    pos: [0, 0],
+    pos: [9.2, 0],
   },
   {
     id: 'usacs',
@@ -213,7 +213,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Running the offense.',
-    pos: [0, 0],
+    pos: [11.5, 2.6],
   },
   {
     id: 'hackru',
@@ -237,7 +237,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Everyone gets a fair whistle.',
-    pos: [0, 0],
+    pos: [11.5, -2.6],
   },
   {
     id: 'calc-ii-la',
@@ -261,7 +261,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Assist leader.',
-    pos: [0, 0],
+    pos: [1.0, -8.6],
   },
   {
     id: 'honors-ambassador',
@@ -285,7 +285,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Home-court host.',
-    pos: [0, 0],
+    pos: [4.2, -8.6],
   },
   {
     id: 'orientation-leader',
@@ -308,7 +308,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Welcome to the arena.',
-    pos: [0, 0],
+    pos: [7.4, -8.6],
   },
   {
     id: 'rutgers-honors',
@@ -332,7 +332,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Home court, 3.84 from the line.',
-    pos: [0, 0],
+    pos: [2.5, 2.5],
   },
   {
     id: 'critics-choice',
@@ -363,7 +363,7 @@ export const stations: Station[] = [
       },
     },
     shotCaption: 'Film study, game tape edition.',
-    pos: [0, 0],
+    pos: [2.5, -2.5],
   },
   {
     id: 'code-ninjas',
@@ -387,7 +387,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Coaching from the sideline.',
-    pos: [0, 0],
+    pos: [-2.5, 3.5],
   },
   {
     id: 'shah-sokoloff',
@@ -411,7 +411,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Locking down the paint.',
-    pos: [0, 0],
+    pos: [-2.5, -3.5],
   },
   {
     id: 'ccm',
@@ -434,7 +434,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'College credit before the draft.',
-    pos: [0, 0],
+    pos: [-3.0, 0],
   },
   {
     id: 'teaching-mentoring',
@@ -458,7 +458,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Sixth man, always passing.',
-    pos: [0, 0],
+    pos: [4.0, 8.6],
   },
   {
     id: 'oculogica',
@@ -494,7 +494,7 @@ export const stations: Station[] = [
       note: 'Results from the internship on 10,000+ EYEBOX exam logs, not output of the public notebook.',
     },
     shotCaption: 'Sensitivity 70, specificity 71. Clean stat line.',
-    pos: [0, 0],
+    pos: [-6.4, 0],
   },
   {
     id: 'ai-camp',
@@ -518,7 +518,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Rookie camp, first reps.',
-    pos: [0, 0],
+    pos: [-7.2, -3.0],
   },
   {
     id: 'robotics',
@@ -545,7 +545,7 @@ export const stations: Station[] = [
       { src: '/media/robotics/logo.webp', width: 80, height: 80, alt: "Tech Devils team logo: a red and black devil." },
     ],
     shotCaption: 'Auto-align, then score.',
-    pos: [0, 0],
+    pos: [-7.2, 3.0],
   },
   {
     id: 'advisory-council',
@@ -569,7 +569,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Courtside at the board table.',
-    pos: [0, 0],
+    pos: [-12.4, 6.0],
   },
   {
     id: 'hackmcst',
@@ -593,7 +593,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Drew up the play, then ran it.',
-    pos: [0, 0],
+    pos: [-9.4, 5.2],
   },
   {
     id: 'nslc',
@@ -617,7 +617,7 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Road trip to Westwood.',
-    pos: [0, 0],
+    pos: [-9.4, -5.2],
   },
   {
     id: 'java-juniors',
@@ -641,6 +641,6 @@ export const stations: Station[] = [
     links: [],
     media: [],
     shotCaption: 'Youth league, my first coaching job.',
-    pos: [0, 0],
+    pos: [-12.4, -6.0],
   },
 ];

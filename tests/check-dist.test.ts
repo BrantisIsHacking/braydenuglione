@@ -36,6 +36,21 @@ describe('check-dist', () => {
   it('fails on a pdf', () => {
     expect(checkDist(fixture({ 'resume.pdf': 'x' }), TERMS).errors.length).toBeGreaterThan(0)
   })
+  it('fails when three.js is in the initial bundle', () => {
+    const d = fixture()
+    writeFileSync(join(d, 'assets', 'a.js'), 'new WebGLRenderer()')
+    expect(checkDist(d, TERMS).errors).toEqual(['three.js in initial bundle'])
+  })
+  it('allows three.js in a non-initial chunk', () => {
+    expect(checkDist(fixture({ 'assets/arena.js': 'new WebGLRenderer()' }), TERMS).errors).toEqual([])
+  })
+  it('fails when over the total budget', () => {
+    const r = checkDist(fixture(), TERMS, { totalBudget: 10 })
+    expect(r.errors.some((e: string) => e.includes('arena total'))).toBe(true)
+  })
+  it('reports total gzip bytes', () => {
+    expect(checkDist(fixture(), TERMS).totalGzipBytes).toBeGreaterThan(0)
+  })
   it('fails when a module script is present but no JS is measured', () => {
     const d = fixture()
     writeFileSync(join(d, 'index.html'), '<script type="module">inline()</script>')

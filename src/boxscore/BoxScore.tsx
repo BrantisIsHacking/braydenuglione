@@ -32,7 +32,7 @@ function ContactLinks() {
   );
 }
 
-export function BoxScore() {
+export function BoxScore({ onEnterArena, notice }: { onEnterArena?: () => void; notice?: string } = {}) {
   const [filter, setFilter] = useState<Filter>('all');
   const [target, setTarget] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -81,6 +81,11 @@ export function BoxScore() {
 
   return (
     <div className="bs">
+      {notice && (
+        <p role="status" className="bs__notice">
+          {notice}
+        </p>
+      )}
       <header className="bs__head">
         <p className="bs__jersey" aria-hidden="true">
           {profile.jersey}
@@ -91,6 +96,11 @@ export function BoxScore() {
           <p className="bs__school">{profile.school}</p>
           <p className="bs__targets">{profile.targets}</p>
           <ContactLinks />
+          {onEnterArena && (
+            <button type="button" className="bs__enter" onClick={onEnterArena}>
+              Enter the arena
+            </button>
+          )}
         </div>
       </header>
 

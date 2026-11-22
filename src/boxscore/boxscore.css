@@ -38,3 +38,7 @@
 .locker__title { font-size: 1.125rem; text-transform: uppercase; letter-spacing: 0.03em; }
 .locker__detail { color: var(--muted); }
 .press__lead { font-size: 1.125rem; max-width: 60ch; margin: 0; }
+
+.bs__enter { margin-top: 1.25rem; font-family: var(--font-display); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; font-size: 1.375rem; color: var(--paper); background: var(--scarlet); border: 0; padding: 0.5rem 1.5rem; min-height: 2.75rem; cursor: pointer; }
+.bs__enter:hover { background: var(--paper); color: var(--scarlet); }
+.bs__notice { border-left: 4px solid var(--scarlet); padding: 0.5rem 0.75rem; margin: 0 0 1rem; background: var(--line); }

@@ -1,6 +1,6 @@
 # Brayden Uglione: portfolio
 
-A portfolio site built as a basketball-arena "box score". Each project, job, and activity is a station with a one-liner, a few bullets, a stat, and links, and you can filter and deep-link to any of them (for example `/#tranquility-base`). A 3D arena version is planned for a later phase and will reuse the same content.
+A portfolio site built as a basketball-arena "box score". Each project, job, and activity is a station with a one-liner, a few bullets, a stat, and links, and you can filter and deep-link to any of them (for example `/#tranquility-base`). A 3D arena version (Phase 2 graybox) reuses the same content.
 
 Live site: _URL goes here once deployed_ (default `https://brayden-uglione.pages.dev`)
 
@@ -25,6 +25,16 @@ BASE_URL=https://your-site.pages.dev npx playwright test
 ```
 
 When `BASE_URL` is set, the local server is skipped.
+
+## Arena
+
+Routes: `#/box-score` (the 2D box score), `#/arena` (the 3D arena, with a Tip-off screen first), and `#<station-id>` (on desktop, opens the arena at that station with its panel open; on phones or reduced motion, scrolls to the card).
+
+Controls: W A S D or arrow keys to move, E to open the nearby station, Escape to close a panel. On touch devices use the on-screen joystick and tap the prompt. `Skip to box score` is always available.
+
+Station positions are the `pos: [x, z]` field of each station in `src/content/stations.ts` (metres, court is 28 x 15 centred at the origin, +x toward the Rutgers end). After editing a `pos`, run `npm test`; the placement test checks bounds, spacing between stations, and distance from spawn.
+
+E2E browser config: `playwright.config.ts` uses `channel: 'chromium'` so the full Chromium build (with software WebGL) runs the arena. Projects are `desktop` and `mobile` (Pixel 7). The arena specs are in `e2e/arena.spec.ts`.
 
 ## Deploy (Cloudflare Pages)
 

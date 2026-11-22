@@ -36,6 +36,7 @@ function siteHtml(env: Record<string, string>): Plugin {
 
 export default defineConfig(({ mode }) => ({
   plugins: [react(), siteHtml(loadEnv(mode, process.cwd(), 'VITE_'))],
+  build: { chunkSizeWarningLimit: 1200 },
   test: {
     environment: 'jsdom',
     setupFiles: ['tests/setup.ts'],

@@ -4,7 +4,7 @@ const baseURL = process.env.BASE_URL ?? 'http://localhost:4173'
 
 export default defineConfig({
   testDir: 'e2e',
-  use: { baseURL },
+  use: { baseURL, channel: 'chromium' },
   projects: [
     { name: 'desktop', use: { viewport: { width: 1280, height: 800 } } },
     { name: 'mobile', use: { ...devices['Pixel 7'] } },

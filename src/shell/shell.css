@@ -1,0 +1,17 @@
+.tipoff { position: relative; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 0.75rem; padding: 2rem 1.25rem; max-width: 72rem; margin: 0 auto; overflow: hidden; border-top: 6px solid var(--scarlet); }
+@media (min-width: 601px) { .tipoff { padding-inline: 2rem; } }
+.tipoff > * { position: relative; }
+.tipoff > .tipoff__jersey { position: absolute; right: -0.05em; bottom: -0.18em; margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(14rem, 55vw, 40rem); line-height: 1; color: var(--scarlet); opacity: 0.16; pointer-events: none; user-select: none; }
+.tipoff__name { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; font-size: clamp(3rem, 13vw, 9rem); line-height: 0.88; letter-spacing: 0.005em; margin: 0; overflow-wrap: anywhere; }
+.tipoff__tagline { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.25rem, 3vw, 1.75rem); margin: 0.5rem 0 0; }
+.tipoff__targets { color: var(--muted); max-width: 52ch; margin: 0 0 1.25rem; font-size: 0.9375rem; }
+.tipoff__go { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; font-size: clamp(1.75rem, 5vw, 2.5rem); color: var(--paper); background: var(--scarlet); border: 0; padding: 0.5rem 2.5rem; min-height: 3.5rem; cursor: pointer; clip-path: polygon(0 0, 100% 0, calc(100% - 0.75rem) 100%, 0 100%); }
+.tipoff__go:hover { background: var(--paper); color: var(--scarlet); }
+.tipoff__go:focus-visible, .tipoff__skip:focus-visible, .bs__enter:focus-visible { outline: 3px solid var(--paper); outline-offset: 4px; }
+.tipoff__hint { color: var(--muted); font-size: 0.875rem; margin: 0.5rem 0 0; }
+.tipoff__skip { color: var(--paper); font-size: 0.9375rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .tipoff__name, .tipoff__go { animation: tipoff-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .tipoff__go { animation-delay: 0.15s; }
+  @keyframes tipoff-in { from { transform: translateY(1.25rem); opacity: 0; } to { transform: none; opacity: 1; } }
+}
