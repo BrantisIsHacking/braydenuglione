@@ -20,7 +20,7 @@ ${links}
 }
 
 function siteHtml(env: Record<string, string>): Plugin {
-  const site = (env.VITE_SITE_URL || 'https://brayden-uglione.pages.dev').replace(/\/$/, '')
+  const site = (env.VITE_SITE_URL || 'https://braydenuglione.pages.dev').replace(/\/$/, '')
   const token = env.VITE_CF_BEACON_TOKEN
   return {
     name: 'site-html',

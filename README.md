@@ -2,7 +2,7 @@
 
 A portfolio site built as a basketball-arena "box score". Each project, job, and activity is a station with a one-liner, a few bullets, a stat, and links, and you can filter and deep-link to any of them (for example `/#tranquility-base`). A 3D arena version (Phase 2 graybox) reuses the same content.
 
-Live site: _URL goes here once deployed_ (default `https://brayden-uglione.pages.dev`)
+Live site: https://braydenuglione.pages.dev
 
 Stack: Vite, React 18, TypeScript. Tests: Vitest (unit) and Playwright (end to end).
 
@@ -47,7 +47,7 @@ Connect the repo in Cloudflare Pages with these settings:
 
 Optional environment variables:
 
-- `VITE_SITE_URL`: the public URL, used for canonical and social-share tags. Defaults to `https://brayden-uglione.pages.dev`.
+- `VITE_SITE_URL`: the public URL, used for canonical and social-share tags. Defaults to `https://braydenuglione.pages.dev`.
 - `VITE_CF_BEACON_TOKEN`: Cloudflare Web Analytics token. If unset, no analytics script is added.
 
 ## Editing content
