@@ -1,11 +1,15 @@
-export type Zone = 'projects' | 'now' | 'rutgers' | 'bridge' | 'bench' | 'throwback';
+export type BuildingId = 'scouting-office'|'hall-of-fame'|'mailbox'|'workshop'|'hq-tower'|'civic-center'|'campus-quad'|'gym'|'golf-clubhouse'|'library'|'cinema'|'record-store'|'playhouse'|'arcade'|'fan-shop'|'chess-park'|'park'|'running-loop';
+export type District = 'square'|'career'|'culture'|'sports';
+export type ThemeColorKey = 'scarlet'|'ink'|'offWhite'|'stone'|'grass'|'path'|'sky'|'water'|'slate'|'brick'|'mustard'|'cinemaRed'|'warmGlow'|'teal'|'gymRed'|'hardwood'|'fairway'|'rack';
+export type Building = { id: BuildingId; name: string; sign: string; district: District; kind: 'interior'|'overlay'|'spot'; stage: 1|2|3; bespoke: boolean; accent: ThemeColorKey; blurb: string };
 export type Category = 'project' | 'experience' | 'leadership' | 'education' | 'throwback';
 export type Link = { label: string; url: string };
 export type Media = { src: string; alt: string; width?: number; height?: number };
 export type TerminalRow = { label: string; value: string };
 export type Station = {
   id: string;
-  zone: Zone;
+  building: BuildingId;
+  floor?: number;
   category: Category;
   kind: 'standard' | 'terminal' | 'video';
   title: string;
@@ -24,17 +28,16 @@ export type Station = {
   terminal?: { command: string; rows: TerminalRow[]; note?: string };
   video?: { youtubeId: string; poster: Media };
   shotCaption: string;
-  pos: [number, number];
+  pos?: [number, number];
 };
-export type Banner = { id: string; title: string; issuer: string; year: string; why: string };
-export type LockerItem = {
-  id: string;
-  title: string;
-  oneLiner: string;
-  detail?: string;
-  link?: Link;
-  shotCaption: string;
-};
+export type Banner = { id: string; title: string; issuer: string; year: string; why: string; building: 'hall-of-fame'; pos?: [number, number] };
+export type CollectionId = 'books'|'films'|'games'|'artists'|'teams';
+export type Interest = { id: string; building: BuildingId; title: string; oneLiner: string; detail?: string; link?: Link; collection?: CollectionId; pos?: [number, number] };
+export type Mirror = { exhibitId: string; building: BuildingId; pos?: [number, number]; floor?: number };
+export type Book = { title: string; author: string; favorite?: boolean };
+export type Film = { title: string; year: number; onDisplay?: boolean };
+export type Game = { title: string; note?: string };
+export type Team = { name: string; sport: 'football'|'basketball'|'baseball'|'hockey'|'soccer' };
 export type Profile = {
   name: string;
   intro: string;

@@ -1,23 +1,29 @@
 import { useEffect, useState } from 'react';
-import { banners, lockerRoom, profile, stationsByCategory, getStation } from '../content';
-import type { Zone } from '../content';
-import { parseHash } from '../routing/hash';
+import { banners, buildings, COLLECTION_LABEL, exhibitsIn, getCollection, getExhibit, profile, stationsByCategory } from '../content';
+import type { Exhibit } from '../content';
+import { parseRoute } from '../routing/routes';
+import { CollectionList } from '../ui/CollectionList';
+import { ContactContent } from '../ui/ContactContent';
+import { ExhibitContent } from '../ui/ExhibitContent';
 import { Filters, type Filter } from './Filters';
 import { StationCard } from './StationCard';
 import './boxscore.css';
 
-const ZONES: { zone: Zone; title: string }[] = [
-  { zone: 'projects', title: 'Projects' },
-  { zone: 'now', title: '2026' },
-  { zone: 'rutgers', title: 'Rutgers' },
-  { zone: 'bridge', title: 'Bridge Year' },
-  { zone: 'bench', title: 'On the Bench' },
-  { zone: 'throwback', title: 'Throwback: Morris Tech' },
-];
+type InterestExhibit = Extract<Exhibit, { type: 'interest' }>;
 
-function ContactLinks() {
+const CAREER = buildings.filter((b) => b.district === 'career');
+
+// Interests grouped by their home building, in building order (mirrors are not repeated).
+const OFF_THE_CLOCK = buildings
+  .map((b) => ({
+    building: b,
+    items: exhibitsIn(b.id).flatMap((p) => (!p.mirror && p.exhibit.type === 'interest' ? [p.exhibit] : [])),
+  }))
+  .filter((g) => g.items.length > 0);
+
+function HeaderLinks() {
   return (
-    <ul className="bs__contact">
+    <ul className="bs__contact" aria-label="Contact links">
       <li>
         <a href={`mailto:${profile.email}`}>{profile.email}</a>
       </li>
@@ -32,15 +38,33 @@ function ContactLinks() {
   );
 }
 
-export function BoxScore({ onEnterArena, notice }: { onEnterArena?: () => void; notice?: string } = {}) {
+function InterestItem({ exhibit }: { exhibit: InterestExhibit }) {
+  const { collection } = exhibit.interest;
+  const bare: InterestExhibit = { ...exhibit, interest: { ...exhibit.interest, collection: undefined } };
+  return (
+    <li id={exhibit.id} data-exhibit={exhibit.id} className="bs__item">
+      <ExhibitContent exhibit={bare} headingLevel={3} />
+      {collection && (
+        <details className="bs__more">
+          <summary>{`${COLLECTION_LABEL[collection]} (${getCollection(collection).length})`}</summary>
+          <CollectionList id={collection} />
+        </details>
+      )}
+    </li>
+  );
+}
+
+export function BoxScore({ onExplore, notice }: { onExplore?: () => void; notice?: string } = {}) {
   const [filter, setFilter] = useState<Filter>('all');
   const [target, setTarget] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
     const apply = (initial = false) => {
-      const { stationId } = parseHash(window.location.hash);
-      if (!stationId) {
+      const route = parseRoute(window.location.hash);
+      const exhibitId = route.view === 'exhibit' ? route.id : null;
+      const ex = exhibitId ? getExhibit(exhibitId) : undefined;
+      if (!exhibitId || !ex) {
         setTarget(null);
         if (!initial) {
           const raw = window.location.hash.slice(1);
@@ -54,9 +78,11 @@ export function BoxScore({ onEnterArena, notice }: { onEnterArena?: () => void; 
         }
         return;
       }
-      const st = getStation(stationId)!;
-      setFilter((f) => (f === 'all' || f === st.category ? f : 'all'));
-      setTarget(stationId);
+      if (ex.type === 'station') {
+        const cat = ex.station.category;
+        setFilter((f) => (f === 'all' || f === cat ? f : 'all'));
+      }
+      setTarget(exhibitId);
       setTick((t) => t + 1);
     };
     const onChange = () => apply();
@@ -67,10 +93,10 @@ export function BoxScore({ onEnterArena, notice }: { onEnterArena?: () => void; 
 
   useEffect(() => {
     if (!target) return;
-    const card = document.getElementById(target);
-    if (!card) return;
-    card.scrollIntoView({ block: 'start' });
-    const h = card.querySelector<HTMLElement>('.station__title');
+    const el = document.getElementById(target);
+    if (!el) return;
+    el.scrollIntoView({ block: 'start' });
+    const h = el.querySelector<HTMLElement>('h1, h2, h3, h4');
     if (h) {
       h.tabIndex = -1;
       h.focus({ preventScroll: true });
@@ -95,10 +121,10 @@ export function BoxScore({ onEnterArena, notice }: { onEnterArena?: () => void; 
           <p className="bs__tagline">{profile.tagline}</p>
           <p className="bs__school">{profile.school}</p>
           <p className="bs__targets">{profile.targets}</p>
-          <ContactLinks />
-          {onEnterArena && (
-            <button type="button" className="bs__enter" onClick={onEnterArena}>
-              Enter the arena
+          <HeaderLinks />
+          {onExplore && (
+            <button type="button" className="bs__enter" onClick={onExplore}>
+              Explore Brayden&apos;s World
             </button>
           )}
         </div>
@@ -107,12 +133,12 @@ export function BoxScore({ onEnterArena, notice }: { onEnterArena?: () => void; 
       <Filters value={filter} onChange={setFilter} />
 
       <main>
-        {ZONES.map(({ zone, title }) => {
-          const list = visible.filter((s) => s.zone === zone);
+        {CAREER.map(({ id: zone, name: title }) => {
+          const list = visible.filter((s) => s.building === zone);
           if (list.length === 0) return null;
           return (
-            <section key={zone} className="zone" aria-labelledby={`zone-${zone}`}>
-              <h2 className="zone__title" id={`zone-${zone}`}>
+            <section key={zone} id={`section-${zone}`} className="zone" aria-labelledby={`section-${zone}-title`}>
+              <h2 className="zone__title" id={`section-${zone}-title`}>
                 {title}
               </h2>
               <div className="zone__grid">
@@ -124,51 +150,40 @@ export function BoxScore({ onEnterArena, notice }: { onEnterArena?: () => void; 
           );
         })}
 
-        <section className="zone" aria-labelledby="section-rafters">
-          <h2 className="zone__title" id="section-rafters">
-            Rafters
+        <section id="section-hall-of-fame" className="zone" aria-labelledby="section-hall-of-fame-title">
+          <h2 className="zone__title" id="section-hall-of-fame-title">
+            Hall of Fame
           </h2>
-          <ul className="rafters" aria-label="Rafters">
+          <ul className="bs__banners">
             {banners.map((b) => (
-              <li key={b.id} className="banner">
-                <h3 className="banner__title">{b.title}</h3>
-                <p className="banner__meta">
-                  {b.issuer} · {b.year}
-                </p>
-                <p className="banner__why">{b.why}</p>
+              <li key={b.id} id={b.id} data-exhibit={b.id} className="bs__item banner">
+                <ExhibitContent exhibit={getExhibit(b.id)!} headingLevel={3} />
               </li>
             ))}
           </ul>
         </section>
 
-        <section className="zone" aria-labelledby="section-locker">
-          <h2 className="zone__title" id="section-locker">
-            Locker Room
+        <section id="section-off-the-clock" className="zone" aria-labelledby="section-off-the-clock-title">
+          <h2 className="zone__title" id="section-off-the-clock-title">
+            Off the clock
           </h2>
-          <ul className="locker" aria-label="Locker Room">
-            {lockerRoom.map((i) => (
-              <li key={i.id} className="locker__item">
-                <h3 className="locker__title">{i.title}</h3>
-                <p>{i.oneLiner}</p>
-                {i.detail && <p className="locker__detail">{i.detail}</p>}
-                {i.link && (
-                  <p>
-                    <a href={i.link.url} target="_blank" rel="noopener noreferrer">
-                      {i.link.label}
-                    </a>
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
+          {OFF_THE_CLOCK.map(({ building, items }) => (
+            <div key={building.id} className="bs__group">
+              <h3 className="bs__group-title">{building.name}</h3>
+              <ul className="bs__interests">
+                {items.map((e) => (
+                  <InterestItem key={e.id} exhibit={e} />
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
 
-        <section className="zone press" aria-labelledby="section-press">
-          <h2 className="zone__title" id="section-press">
-            Press Table
+        <section id="contact" data-exhibit="contact" className="zone press" aria-labelledby="contact-title">
+          <h2 className="zone__title" id="contact-title">
+            Contact
           </h2>
-          <p className="press__lead">{profile.targets}.</p>
-          <ContactLinks />
+          <ContactContent />
         </section>
       </main>
     </div>

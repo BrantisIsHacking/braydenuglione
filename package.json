@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "e2e": "playwright test",
-    "media": "node scripts/build-media.mjs"
+    "media": "node scripts/build-media.mjs",
+    "models": "node scripts/build-models.mjs"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.3.0",
@@ -20,12 +21,16 @@
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
+    "@react-three/postprocessing": "^2.19.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "three": "^0.187.0",
     "zustand": "^5.1.0"
   },
   "devDependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
     "@playwright/test": "^1.65.1",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.9.1",
@@ -36,6 +41,7 @@
     "@types/three": "^0.187.0",
     "@vitejs/plugin-react": "^4.3.3",
     "jsdom": "^25.0.1",
+    "meshoptimizer": "^1.3.0",
     "sharp": "^0.35.5",
     "typescript": "~5.6.2",
     "vite": "^5.4.10",

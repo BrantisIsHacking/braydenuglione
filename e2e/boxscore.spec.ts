@@ -11,32 +11,33 @@ async function open(page: import('@playwright/test').Page, url: string) {
   const errors = trackErrors(page)
   await page.goto(url, { waitUntil: 'load' })
   await expect(page.locator('[data-station]')).toHaveCount(24)
+  await expect(page.locator('[data-exhibit]')).toHaveCount(45)
   await page.waitForLoadState('networkidle')
   return errors
 }
 
-test('loads with h1, 24 cards, no console errors', async ({ page }) => {
+test('loads with h1, 45 exhibits (24 stations), no console errors', async ({ page }) => {
   const errors = await open(page, '/#/box-score')
   await expect(page.getByRole('heading', { level: 1, name: 'Brayden Uglione' })).toBeVisible()
   expect(errors, errors.join('\n')).toEqual([])
 })
 
 test('deep link scrolls card into viewport', async ({ page }, info) => {
-  test.skip(info.project.name !== 'mobile', 'desktop resolves these to the arena')
+  test.skip(info.project.name !== 'mobile', 'desktop resolves these to the world')
   const errors = await open(page, '/#tranquility-base')
   await expect(page.locator('#tranquility-base')).toBeInViewport()
   expect(errors, errors.join('\n')).toEqual([])
 })
 
 test('unknown hash stays at top without errors', async ({ page }, info) => {
-  test.skip(info.project.name !== 'mobile', 'desktop resolves these to the arena')
+  test.skip(info.project.name !== 'mobile', 'desktop resolves these to the world')
   const errors = await open(page, '/#nope')
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
   expect(errors, errors.join('\n')).toEqual([])
 })
 
 test('hashchange to unknown hash from scrolled state returns to top', async ({ page }, info) => {
-  test.skip(info.project.name !== 'mobile', 'desktop resolves these to the arena')
+  test.skip(info.project.name !== 'mobile', 'desktop resolves these to the world')
   const errors = await open(page, '/#tranquility-base')
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
   await page.evaluate(() => {
@@ -50,6 +51,7 @@ test('no horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 })
   await page.goto('/#/box-score')
   await expect(page.locator('[data-station]')).toHaveCount(24)
+  await expect(page.locator('[data-exhibit]')).toHaveCount(45)
   const o = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
   expect(o).toBe(true)
 })
@@ -61,4 +63,9 @@ test('raw HTML has noscript fallback and social meta', async ({ request }) => {
   expect(ns![1]).toContain('uglionebrayden@gmail.com')
   expect(html).toContain('og:image')
   expect(html).toContain('og:title')
+})
+
+test('Box Score offers the Explore button', async ({ page }) => {
+  await open(page, '/#/box-score')
+  await expect(page.getByRole('button', { name: /Explore Brayden.s World/ })).toBeVisible()
 })

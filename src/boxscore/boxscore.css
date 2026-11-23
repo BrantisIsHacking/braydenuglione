@@ -42,3 +42,13 @@
 .bs__enter { margin-top: 1.25rem; font-family: var(--font-display); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; font-size: 1.375rem; color: var(--paper); background: var(--scarlet); border: 0; padding: 0.5rem 1.5rem; min-height: 2.75rem; cursor: pointer; }
 .bs__enter:hover { background: var(--paper); color: var(--scarlet); }
 .bs__notice { border-left: 4px solid var(--scarlet); padding: 0.5rem 0.75rem; margin: 0 0 1rem; background: var(--line); }
+
+.bs__banners, .bs__interests { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+.bs__item { min-width: 0; overflow-wrap: anywhere; scroll-margin-top: calc(var(--filters-h) + 1rem); }
+.bs__interests > .bs__item { border-left: 2px solid var(--line); padding-left: 0.75rem; font-size: 0.9375rem; }
+.bs__group { margin-top: 1.5rem; }
+.bs__group-title { font-size: 1.25rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 0.75rem; }
+.bs__more { margin-top: 0.75rem; }
+.bs__more > summary { cursor: pointer; min-height: 2.5rem; display: flex; align-items: center; font-weight: 600; }
+.bs__more > summary:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+#contact { scroll-margin-top: calc(var(--filters-h) + 1rem); }

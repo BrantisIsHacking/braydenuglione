@@ -4,7 +4,7 @@ import { StationContent, formatRange } from '../../src/ui/StationContent';
 import type { Station } from '../../src/content/types';
 
 const tranquility: Station = {
-  id: 'tranquility-base', zone: 'projects', category: 'project', kind: 'standard',
+  id: 'tranquility-base', building: 'workshop', category: 'project', kind: 'standard',
   title: 'Tranquility Base', org: 'Hackathon', role: 'Developer', start: '2025-10', end: '2025-10',
   oneLiner: 'A lunar base planner.', body: 'Body text here.', bullets: ['One', 'Two'],
   stat: { value: '3', label: 'views' }, tech: ['React', 'Three.js'],
@@ -18,7 +18,7 @@ const tranquility: Station = {
     { src: '/media/tranquility-base/standing-view.webp', alt: 'Standing view inside the base' },
   ],
   credits: 'Built with Rohan Sharma, Tanish Banota, and Hasan Ali',
-  shotCaption: 'x', pos: [0, 0],
+  shotCaption: 'x',
 };
 
 describe('StationContent', () => {

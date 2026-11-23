@@ -1,6 +1,6 @@
 # Brayden Uglione: portfolio
 
-A portfolio site built as a basketball-arena "box score". Each project, job, and activity is a station with a one-liner, a few bullets, a stat, and links, and you can filter and deep-link to any of them (for example `/#tranquility-base`). A 3D arena version (Phase 2 graybox) reuses the same content.
+A portfolio site built as a basketball-arena "box score". Each project, job, and activity is a station with a one-liner, a few bullets, a stat, and links, and you can filter and deep-link to any of them (for example `/#tranquility-base`). A 3D version, Brayden's World, reuses the same content.
 
 Live site: https://braydenuglione.pages.dev
 
@@ -26,15 +26,75 @@ BASE_URL=https://your-site.pages.dev npx playwright test
 
 When `BASE_URL` is set, the local server is skipped.
 
-## Arena
+## Brayden's World
 
-Routes: `#/box-score` (the 2D box score), `#/arena` (the 3D arena, with a Tip-off screen first), and `#<station-id>` (on desktop, opens the arena at that station with its panel open; on phones or reduced motion, scrolls to the card).
+The portfolio is also a small 3D town you walk around (top-down camera, one shared canvas). The outdoor map has the Scouting Office (opens the Box Score), the Hall of Fame, a Press Desk (contact), and a ring of buildings and spots. Doors on a building's south face open its interior: the Gym is a bespoke restyled high-school gym, and every other building opens the generic Exhibit Hall, a row of pedestals, one per exhibit. There are 45 exhibits in all: 24 stations, 7 banners, 13 interests and the contact card. The same content powers the 2D Box Score.
 
-Controls: W A S D or arrow keys to move, E to open the nearby station, Escape to close a panel. On touch devices use the on-screen joystick and tap the prompt. `Skip to box score` is always available.
+Controls: W A S D or arrow keys to move; E, Enter or Space to open the nearby exhibit; M for the Map (fast travel); `+` / `-`, the mouse wheel or a two-finger pinch to zoom; Escape closes a panel or the Map. Letter keys only act while the world (or the page body) has focus, so typing in a filter never moves the player. On touch devices use the on-screen joystick and the Interact button. `Skip to box score` is the first tab stop.
 
-Station positions are the `pos: [x, z]` field of each station in `src/content/stations.ts` (metres, court is 28 x 15 centred at the origin, +x toward the Rutgers end). After editing a `pos`, run `npm test`; the placement test checks bounds, spacing between stations, and distance from spawn.
+Routes (hash based, parsed by `src/routing/routes.ts`):
 
-E2E browser config: `playwright.config.ts` uses `channel: 'chromium'` so the full Chromium build (with software WebGL) runs the arena. Projects are `desktop` and `mobile` (Pixel 7). The arena specs are in `e2e/arena.spec.ts`.
+| Hash | Opens |
+|---|---|
+| `#/` (or empty) | Start screen, then the world; phones, reduced motion, no WebGL or under 4 GB memory get the Box Score with an "Explore Brayden's World" button |
+| `#/world` | The outdoor world at the spawn point |
+| `#/b/<building-id>` | That building's interior (`#/b/scouting-office` goes to the Box Score; unknown ids fall back to the default view) |
+| `#/box-score` | The 2D Box Score |
+| `#<exhibit-id>` | The building that holds the exhibit, with its panel open (Box Score: scrolls to the card). Mirrored exhibits keep their home building |
+| `#/arena` | Legacy alias, rewritten to `#/b/gym` without a new history entry |
+
+The world code is in `src/world/` (`WorldApp.tsx` shell, `logic/` pure rules, `kit/` shared 3D parts, `world/` the outdoor scene, `interiors/` the Gym and the generic hall, `ui/` HUD, panel, Map). Content is in `src/content/`.
+
+### Add an interest
+
+1. Append a `Building` to `src/content/buildings.ts` (id, name, sign, district, kind, accent, blurb). Signs use the generic allow-list or start with `Brayden's `; no logos.
+2. Append its `Interest` rows to `src/content/interests.ts`, with `building` set to the new id. A long list can point at a collection file (`books.ts`, `films.ts`, ...), registered in `collections.ts`.
+3. Add an entry to the `LOTS` table in `src/world/logic/layout.ts` (position and size; spots use a `spot` point, interiors a door on the south face).
+
+An `Interest` (type in `src/content/types.ts`) looks like this; only `detail`, `link`, `collection` and `pos` are optional:
+
+```ts
+{
+  id: 'speedcubing',            // unique, lowercase, no spaces
+  building: 'workshop',         // an existing Building id
+  title: 'Speedcubing',
+  oneLiner: 'Best 3x3 solve: 24 seconds.',
+  detail: 'Optional longer text.',
+  link: { label: 'example.com', url: 'https://example.com' }, // https only
+},
+```
+
+Run `npm test`: the layout, route and content tests check overlaps, reachability and ids. The interior appears automatically in the generic Exhibit Hall, the Map and the Box Score.
+
+### Add a bespoke interior
+
+Create `src/world/interiors/<id>/` with an `Interior.tsx` that default-exports the scene and exports `sceneGeometry()` (bounds, colliders, exits, exhibit positions, entrance pose, camera distance), then add one line to `src/world/interiors/registry.ts`:
+
+```ts
+'<building-id>': () => import('./<id>/Interior'),
+```
+
+Every 3D string must go through `toFontSafe` (troika would otherwise fetch glyphs from a CDN). Keep it within the draw-call budget below.
+
+### Budgets and effects mode
+
+Hard limits (the build or the e2e suite fails): initial JS at most 200 KB gzip (three, R3F and zustand are only reachable through dynamic imports), total gzip of `dist/assets` plus `dist/models` under 5 MB, draw calls at most 200 in the world and 150 in each interior, no cross-origin requests (YouTube loads only after a click, from `youtube-nocookie.com`). Chunk targets (warnings only): engine 400 KB, world scene 150 KB, Gym 150 KB, other interiors 120 KB gzip.
+
+`?fx=low` (or `VITE_ARENA_FX=low` at build time) drops post-processing and uses device pixel ratio 1. `?fx=full` forces full effects. Without an override the world falls back to low on a slow GPU. Reduced motion removes fades and ambient animation.
+
+E2E: `playwright.config.ts` uses `channel: 'chromium'` so the full Chromium build (software WebGL) runs the world. Projects are `desktop` and `mobile` (Pixel 7). Specs: `e2e/world.spec.ts` (navigation), `e2e/world-perf.spec.ts` (budgets, cross-origin, reduced motion, mobile, tablet), `e2e/gym-look.spec.ts`, `e2e/boxscore.spec.ts`.
+
+## 3D models and look
+
+Look tuning (colours, lights, bloom, outline, crowd) lives in `src/world/look/theme.ts`. The Gym has no bloom, so its hardwood stays wood-coloured. `npm run build` and the e2e suite enforce the budgets above.
+
+The player avatar is `public/models/player.glb`, built from CC0 assets by Quaternius: [Universal Base Characters](https://quaternius.itch.io/universal-base-characters) and [Universal Animation Library](https://quaternius.itch.io/universal-animation-library) (both CC0, thank you Quaternius). The raw packs are not in this repo. To rebuild the avatar:
+
+1. Download both packs (the Standard zips) manually from their itch.io pages above.
+2. Put the zips in `_source/models/` and unzip them to `_source/models/ubc/` and `_source/models/ual/`.
+3. Run `npm run models`, which regenerates `public/models/player.glb`.
+
+If the GLB fails to load, the world falls back to a capsule avatar and stays playable.
 
 ## Deploy (Cloudflare Pages)
 
@@ -54,21 +114,6 @@ Optional environment variables:
 
 All copy lives in `src/content/`. No component changes are needed for these edits.
 
-### Add a locker-room easter egg
-
-Append one object to the end of the list in `src/content/lockerRoom.ts`. The shape is `LockerItem` from `src/content/types.ts`:
-
-```ts
-{
-  id: 'speedcubing',            // unique, lowercase, no spaces
-  title: 'Speedcubing',
-  oneLiner: 'Best 3x3 solve: 24 seconds.',
-  detail: 'Optional longer text.',                       // optional
-  link: { label: 'example.com', url: 'https://example.com' }, // optional, https only
-  shotCaption: 'Twenty-four flat. Buzzer beater.',
-},
-```
-
 ### Edit a station
 
 Stations are in `src/content/stations.ts`. Station ids are used by deep links and by tests, so do not rename them. The tests in `tests/content.test.ts` enforce:
@@ -83,4 +128,10 @@ Run `npm test` after editing.
 
 ## Privacy rule
 
-Never put phone numbers or private notes in this repo, including in comments and in `public/`. The build runs `scripts/check-dist.mjs`, which fails if a phone pattern appears in `dist/` or if the JavaScript size budget (200 KB gzip) is exceeded.
+Never put phone numbers or private notes in this repo, including in comments and in `public/`. The build runs `scripts/check-dist.mjs`, which fails if:
+
+- a phone-number pattern appears in `dist/`;
+- a private term appears in `dist/` text files (and in embedded glTF JSON). Terms come from `src/privacy/privateTerms.mjs`: the `PRIVATE_TERMS` environment variable (comma-separated) if set, otherwise the gitignored file `_source/private-terms.txt` (one term per line, `#` comments). If neither provides any terms, the build prints a warning that the scan was skipped but does not fail;
+- the initial JavaScript exceeds 200 KB gzip, or all built assets (`dist/assets` plus `dist/models`) exceed 5 MB gzip in total.
+
+After the checks pass the script deletes `dist/.vite/` so the build manifest is not deployed.

@@ -1,0 +1,214 @@
+import { getBuilding, getExhibit, homeBuilding } from '../content';
+import type { BuildingId } from '../content/types';
+import type { Route } from '../routing/routeWords';
+import type { WorldStore } from './store';
+import { inFront, type Pose, type Scene, type SceneGeometry, type Target } from './types';
+
+export const WORLD_HASH = '#/world';
+
+export function hashForScene(s: Scene): string {
+  return s.kind === 'world' ? WORLD_HASH : `#/b/${s.id}`;
+}
+
+export function hashFor(s: Scene, panelId: string | null): string {
+  return panelId ? `#${panelId}` : hashForScene(s);
+}
+
+export function sameScene(a: Scene, b: Scene): boolean {
+  if (a.kind === 'world' || b.kind === 'world') return a.kind === b.kind;
+  return a.id === b.id;
+}
+
+function samePose(a: Pose | null, b: Pose | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.x === b.x && a.z === b.z && a.heading === b.heading;
+}
+
+function sameTarget(a: Target, b: Target): boolean {
+  return sameScene(a.scene, b.scene) && samePose(a.pose, b.pose) && a.panelId === b.panelId;
+}
+
+export type RouteCtx = { scene: Scene; activeId: string | null; worldPose: Pose; spotPose(id: BuildingId): Pose };
+
+/** Where a building (or an exhibit's home building) puts the player. Mirrors never change the home. */
+function targetForBuilding(id: BuildingId, panelId: string | null, ctx: RouteCtx): Target | 'boxscore' {
+  const b = getBuilding(id);
+  if (!b) return { scene: { kind: 'world' }, pose: ctx.worldPose, panelId: null };
+  if (b.kind === 'overlay') return 'boxscore';
+  if (b.kind === 'spot') return { scene: { kind: 'world' }, pose: ctx.spotPose(b.id), panelId };
+  return { scene: { kind: 'interior', id: b.id }, pose: null, panelId };
+}
+
+export function targetForRoute(r: Route, ctx: RouteCtx): Target | 'boxscore' {
+  switch (r.view) {
+    case 'boxscore':
+      return 'boxscore';
+    case 'building':
+      return targetForBuilding(r.id, null, ctx);
+    case 'exhibit': {
+      const home = getExhibit(r.id) ? homeBuilding(r.id) : undefined;
+      if (!home) return { scene: { kind: 'world' }, pose: ctx.worldPose, panelId: null };
+      return targetForBuilding(home, r.id, ctx);
+    }
+    default: // 'auto' | 'world'
+      return { scene: { kind: 'world' }, pose: ctx.worldPose, panelId: null };
+  }
+}
+
+export type Plan = { kind: 'none' } | { kind: 'panel'; panelId: string | null } | { kind: 'go'; target: Target } | { kind: 'boxscore' };
+
+export function planRoute(r: Route, ctx: RouteCtx): Plan {
+  const target = targetForRoute(r, ctx);
+  if (target === 'boxscore') return { kind: 'boxscore' };
+  const stay =
+    sameScene(target.scene, ctx.scene) &&
+    (target.pose === null || (ctx.scene.kind === 'world' && samePose(target.pose, ctx.worldPose)));
+  if (!stay) return { kind: 'go', target };
+  return target.panelId !== ctx.activeId ? { kind: 'panel', panelId: target.panelId } : { kind: 'none' };
+}
+
+export function spawnPoseFor(t: Target, g: SceneGeometry): Pose {
+  if (t.pose) return t.pose;
+  if (t.panelId) {
+    const placed = g.exhibits.find((e) => e.id === t.panelId);
+    if (placed) return inFront(placed.pos);
+  }
+  return g.entrance;
+}
+
+export type HistoryDeps = {
+  win: Window;
+  store: WorldStore;
+  parse(hash: string): Route;
+  exitPose(id: BuildingId): Pose;
+  spotPose(id: BuildingId): Pose;
+  toBoxScore(): void;
+  /** Reduced motion: scene changes skip the fade-out. */
+  reducedMotion?: boolean;
+};
+
+/**
+ * The only code that writes `history`. Pushes on scene changes (doors, exits, fast travel),
+ * replaces on panel open/close, applies Back/Forward and typed hashes without writing.
+ */
+export function createHistorySync(d: HistoryDeps): { start(): void; travel(hash: string): void; restore(): void; dispose(): void } {
+  const { win, store } = d;
+  let applying = false;
+  /**
+   * Hash last written or applied by this module; a second event for the same navigation is ignored.
+   * Invariant: only this module and App's Box Score switch (Skip link, Scouting Office / toBoxScore,
+   * the Box Score's Explore, the legacy #/arena replace) write the URL. Anything else writing the hash
+   * would desync `current` from the store and break this dedupe.
+   */
+  let current: string | null = null;
+  let unsubscribe: (() => void) | null = null;
+
+  const ctx = (): RouteCtx => {
+    const s = store.getState();
+    return { scene: s.scene, activeId: s.activeId, worldPose: s.worldPose, spotPose: d.spotPose };
+  };
+
+  const parseSafe = (hash: string): Route => {
+    try {
+      return d.parse(hash);
+    } catch {
+      return { view: 'auto' };
+    }
+  };
+
+  /** While a transition is in flight, plan against the pending target, not the scene being left. */
+  const plan = (r: Route): Plan => {
+    const s = store.getState();
+    if (!s.pending) return planRoute(r, ctx());
+    const t = targetForRoute(r, ctx());
+    if (t === 'boxscore') return { kind: 'boxscore' };
+    return sameTarget(t, s.pending) ? { kind: 'none' } : { kind: 'go', target: t };
+  };
+
+  const write = (kind: 'push' | 'replace', hash: string) => {
+    current = hash;
+    if (win.location.hash === hash && kind === 'replace') return;
+    if (kind === 'push') win.history.pushState(null, '', hash);
+    else win.history.replaceState(null, '', hash);
+  };
+
+  const withApply = (fn: () => void) => {
+    applying = true;
+    try {
+      fn();
+    } finally {
+      applying = false;
+    }
+  };
+
+  const applyGo = (t: Target, instant: boolean) =>
+    withApply(() => {
+      const s = store.getState();
+      if (t.scene.kind === 'interior') s.setWorldPose(d.exitPose(t.scene.id));
+      store.getState().go(t, { instant: instant || !!d.reducedMotion });
+    });
+
+  const applyPanel = (panelId: string | null) =>
+    withApply(() => {
+      const s = store.getState();
+      if (panelId) s.openPanel(panelId);
+      else s.closePanel();
+    });
+
+  const onNav = () => {
+    const hash = win.location.hash;
+    if (hash === current) return;
+    current = hash;
+    const p = plan(parseSafe(hash));
+    if (p.kind === 'go') applyGo(p.target, false);
+    else if (p.kind === 'panel') applyPanel(p.panelId);
+    // 'boxscore' is ignored here: App owns that screen switch.
+  };
+
+  return {
+    start() {
+      win.addEventListener('popstate', onNav);
+      win.addEventListener('hashchange', onNav);
+      unsubscribe = store.subscribe((s, prev) => {
+        if (applying) return;
+        if (s.phase !== 'idle' || s.pending !== null) return;
+        const settled = prev.phase !== 'idle' || prev.pending !== null;
+        if (!settled) {
+          if (s.activeId !== prev.activeId) write('replace', hashFor(s.scene, s.activeId));
+          return;
+        }
+        // On settle, reconcile only a panel opened or closed during the fade-in: rewrite when the panel the
+        // URL implies differs from the open one (never a canonical rewrite, so #/b/chess-park stays).
+        const implied = targetForRoute(parseSafe(win.location.hash), ctx());
+        const impliedPanel = implied === 'boxscore' ? null : implied.panelId;
+        if (impliedPanel !== s.activeId) write('replace', hashFor(s.scene, s.activeId));
+      });
+      current = win.location.hash;
+      const t = targetForRoute(parseSafe(current), ctx());
+      if (t === 'boxscore') d.toBoxScore();
+      else applyGo(t, true);
+    },
+    travel(hash) {
+      const p = plan(parseSafe(hash));
+      if (p.kind === 'boxscore') d.toBoxScore();
+      else if (p.kind === 'go') {
+        write('push', hashFor(p.target.scene, p.target.panelId));
+        applyGo(p.target, false);
+      } else if (p.kind === 'panel') {
+        write('replace', hashFor(store.getState().scene, p.panelId));
+        applyPanel(p.panelId);
+      }
+    },
+    restore() {
+      const s = store.getState();
+      write('replace', hashFor(s.scene, s.activeId));
+    },
+    dispose() {
+      win.removeEventListener('popstate', onNav);
+      win.removeEventListener('hashchange', onNav);
+      unsubscribe?.();
+      unsubscribe = null;
+    },
+  };
+}

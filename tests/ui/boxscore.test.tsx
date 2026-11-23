@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../../src/App'
+import { BoxScore } from '../../src/boxscore/BoxScore'
+import { EXHIBIT_COUNT, exhibits } from '../../src/content'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -21,12 +23,48 @@ describe('Box Score page', () => {
     expect(container.querySelectorAll('[data-station]')).toHaveLength(24)
   })
 
-  it('lists 7 rafters banners and the contact email', () => {
-    render(<App />)
-    const rafters = screen.getByRole('list', { name: 'Rafters' })
-    expect(within(rafters).getAllByRole('listitem')).toHaveLength(7)
+  it('lists 7 Hall of Fame banners and the contact email', () => {
+    const { container } = render(<App />)
+    const hof = container.querySelector('#section-hall-of-fame') as HTMLElement
+    expect(within(hof).getByRole('heading', { name: 'Hall of Fame' })).toBeTruthy()
+    expect(within(hof).getAllByRole('listitem')).toHaveLength(7)
     const mail = screen.getAllByRole('link').filter((a) => a.getAttribute('href') === 'mailto:uglionebrayden@gmail.com')
     expect(mail.length).toBeGreaterThan(0)
+  })
+
+  it('renders every exhibit once, with the new sections', () => {
+    const { container } = render(<App />)
+    const ids = [...container.querySelectorAll('[data-exhibit]')].map((e) => e.getAttribute('data-exhibit'))
+    expect(ids).toHaveLength(EXHIBIT_COUNT)
+    expect(new Set(ids).size).toBe(EXHIBIT_COUNT)
+    expect(new Set(ids)).toEqual(new Set(exhibits.map((e) => e.id)))
+    for (const id of ids) expect(container.querySelector(`#${id}`)).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Hall of Fame' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Off the clock' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Contact' })).toBeTruthy()
+    for (const gone of ['Locker Room', 'Rafters', 'Press Table']) expect(screen.queryByText(gone)).toBeNull()
+    expect(screen.getByText('Books on the shelf (75)')).toBeTruthy()
+  })
+
+  it('filtering to projects keeps Hall of Fame', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Projects' }))
+    expect(screen.getByRole('heading', { name: 'Hall of Fame' })).toBeTruthy()
+  })
+
+  it('#books scrolls the interest into view', () => {
+    window.location.hash = '#books'
+    render(<App />)
+    const spy = Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>
+    expect(spy).toHaveBeenCalled()
+    expect((spy.mock.contexts as Element[]).some((el) => el.id === 'books')).toBe(true)
+  })
+
+  it('Explore button calls onExplore', () => {
+    const onExplore = vi.fn()
+    render(<BoxScore onExplore={onExplore} />)
+    fireEvent.click(screen.getByRole('button', { name: "Explore Brayden's World" }))
+    expect(onExplore).toHaveBeenCalled()
   })
 
   it('unknown deep link renders from the top without errors', () => {

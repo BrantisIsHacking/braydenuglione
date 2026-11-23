@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { findPrivateTerm, loadPrivateTerms } from '../src/privacy/privateTerms.mjs';
-import { stations, profile, lockerRoom, ALL_TEXT, PHONE_PATTERN } from '../src/content';
+import { stations, profile, interests, ALL_TEXT, PHONE_PATTERN } from '../src/content';
 
 const terms = loadPrivateTerms();
 
@@ -13,30 +13,30 @@ const ROSTER = [
 ];
 
 const TABLE = [
-  ['tranquility-base', 'projects', 'project', 'standard'],
-  ['dreams-come-true', 'projects', 'project', 'standard'],
-  ['debate-mate', 'projects', 'project', 'standard'],
-  ['zayi-ai-studio', 'projects', 'project', 'terminal'],
-  ['airbnb-classifier', 'projects', 'project', 'terminal'],
-  ['zayi-fellow', 'now', 'experience', 'standard'],
-  ['usacs', 'now', 'leadership', 'standard'],
-  ['hackru', 'now', 'leadership', 'standard'],
-  ['calc-ii-la', 'now', 'experience', 'standard'],
-  ['honors-ambassador', 'now', 'leadership', 'standard'],
-  ['orientation-leader', 'now', 'leadership', 'standard'],
-  ['rutgers-honors', 'rutgers', 'education', 'standard'],
-  ['critics-choice', 'rutgers', 'education', 'video'],
-  ['code-ninjas', 'bridge', 'experience', 'standard'],
-  ['shah-sokoloff', 'bridge', 'experience', 'standard'],
-  ['ccm', 'bridge', 'education', 'standard'],
-  ['teaching-mentoring', 'bench', 'leadership', 'standard'],
-  ['oculogica', 'throwback', 'experience', 'terminal'],
-  ['ai-camp', 'throwback', 'experience', 'standard'],
-  ['robotics', 'throwback', 'throwback', 'standard'],
-  ['advisory-council', 'throwback', 'throwback', 'standard'],
-  ['hackmcst', 'throwback', 'throwback', 'standard'],
-  ['nslc', 'throwback', 'throwback', 'standard'],
-  ['java-juniors', 'throwback', 'throwback', 'standard'],
+  ['tranquility-base', 'project', 'standard'],
+  ['dreams-come-true', 'project', 'standard'],
+  ['debate-mate', 'project', 'standard'],
+  ['zayi-ai-studio', 'project', 'terminal'],
+  ['airbnb-classifier', 'project', 'terminal'],
+  ['zayi-fellow', 'experience', 'standard'],
+  ['usacs', 'leadership', 'standard'],
+  ['hackru', 'leadership', 'standard'],
+  ['calc-ii-la', 'experience', 'standard'],
+  ['honors-ambassador', 'leadership', 'standard'],
+  ['orientation-leader', 'leadership', 'standard'],
+  ['rutgers-honors', 'education', 'standard'],
+  ['critics-choice', 'education', 'video'],
+  ['code-ninjas', 'experience', 'standard'],
+  ['shah-sokoloff', 'experience', 'standard'],
+  ['ccm', 'education', 'standard'],
+  ['teaching-mentoring', 'leadership', 'standard'],
+  ['oculogica', 'experience', 'terminal'],
+  ['ai-camp', 'experience', 'standard'],
+  ['robotics', 'throwback', 'standard'],
+  ['advisory-council', 'throwback', 'standard'],
+  ['hackmcst', 'throwback', 'standard'],
+  ['nslc', 'throwback', 'standard'],
+  ['java-juniors', 'throwback', 'standard'],
 ];
 
 describe('content schema', () => {
@@ -48,8 +48,8 @@ describe('content schema', () => {
   it('roster matches plan', () => {
     expect(stations.map((s) => s.id)).toEqual(ROSTER);
   });
-  it('zone, category and kind match the roster table', () => {
-    expect(stations.map((s) => [s.id, s.zone, s.category, s.kind])).toEqual(TABLE);
+  it('category and kind match the roster table', () => {
+    expect(stations.map((s) => [s.id, s.category, s.kind])).toEqual(TABLE);
   });
   it('oneLiner <= 90 chars, bullets <= 3, required text non-empty', () => {
     stations.forEach((s) => {
@@ -67,7 +67,7 @@ describe('content schema', () => {
     const links = [
       ...stations.flatMap((s) => s.links),
       ...profile.links,
-      ...lockerRoom.flatMap((l) => (l.link ? [l.link] : [])),
+      ...interests.flatMap((l) => (l.link ? [l.link] : [])),
     ];
     links.forEach((l) => expect(l.url).toMatch(/^https:\/\//));
   });
