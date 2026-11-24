@@ -3,6 +3,7 @@ import sharp from 'sharp';
 import { readFileSync, mkdirSync, existsSync, writeFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildOg } from './build-og.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(root, '_source');
@@ -31,7 +32,6 @@ const VESTIBULAR = {
   outs: ['media/oculogica/correlation.webp', 'media/oculogica/threshold-3.webp'],
 };
 const AIRBNB = { nb: 'notebooks/airbnb_price_classification.ipynb', outs: ['media/airbnb-classifier/plot-1.webp'] };
-const HEADSHOT = 'Headshot.jpg';
 
 export const MEDIA_OUTPUTS = [
   ...Object.values(FILES), LOGO[1], POSTER, ...VESTIBULAR.outs, ...AIRBNB.outs,
@@ -103,21 +103,8 @@ async function main() {
   ]);
   await writeOut(POSTER, await toWebp(poster));
 
-  // og.png 1200x630
-  const D = 400;
-  const head = await sharp(need(HEADSHOT)).rotate().resize(D, D, { fit: 'cover', position: 'top' })
-    .composite([{ input: Buffer.from(`<svg width="${D}" height="${D}"><circle cx="${D / 2}" cy="${D / 2}" r="${D / 2}"/></svg>`), blend: 'dest-in' }])
-    .png().toBuffer();
-  const svg = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-<rect width="1200" height="630" fill="#0A0A0A"/><rect x="0" y="0" width="16" height="630" fill="#CC0033"/>
-<text x="80" y="290" font-family="Arial Narrow, Arial, sans-serif" font-weight="700" font-size="84" fill="#FFFFFF">Brayden Uglione</text>
-<rect x="80" y="320" width="120" height="8" fill="#CC0033"/>
-<text x="80" y="390" font-family="Arial, sans-serif" font-size="36" fill="#CC0033">CS + Data Science · Rutgers Honors</text>
-<circle cx="930" cy="315" r="${D / 2 + 8}" fill="#CC0033"/></svg>`;
-  const og = await sharp(Buffer.from(svg)).composite([{ input: head, left: 930 - D / 2, top: 315 - D / 2 }]).png().toBuffer();
-  mkdirSync(PUB, { recursive: true });
-  writeFileSync(join(PUB, 'og.png'), og);
-  console.log(`build-media: wrote ${MEDIA_OUTPUTS.length} media files + og.png`);
+  await buildOg(); // og.png lives in build-og.mjs
+  console.log(`build-media: wrote ${MEDIA_OUTPUTS.length} media files`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();

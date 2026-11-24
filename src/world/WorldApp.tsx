@@ -70,7 +70,7 @@ export default function WorldApp({ env }: WorldAppProps) {
       poseSaved.current = true;
       window.location.hash = BOX_SCORE;
     };
-    const sync = createHistorySync({ win: window, store: useWorld, parse: parseRoute, exitPose, spotPose, toBoxScore, reducedMotion: env.reducedMotion });
+    const sync = createHistorySync({ win: window, store: useWorld, parse: parseRoute, exitPose, spotPose, toBoxScore, livePose: () => ({ ...playerPose }), reducedMotion: env.reducedMotion });
     const onDoor = (id: BuildingId) => {
       const kind = getBuilding(id)?.kind;
       if (kind === 'overlay') {
@@ -143,12 +143,10 @@ export default function WorldApp({ env }: WorldAppProps) {
       data-avatar={avatar}
       data-world-focus
       tabIndex={-1}
-      role="application"
-      aria-label={env.coarsePointer ? LABEL_TOUCH : LABEL_DESKTOP}
     >
       <Hud onScoutingOffice={nav.toBoxScore} />
       <h1 style={hiddenStyle}>Brayden Uglione — Brayden&apos;s World</h1>
-      <div ref={canvasRef} style={canvasStyle}>
+      <div ref={canvasRef} style={canvasStyle} role="application" aria-label={env.coarsePointer ? LABEL_TOUCH : LABEL_DESKTOP}>
         <Canvas dpr={dpr} camera={{ fov: 40, near: 0.1, far: 200 }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
           <FxGovernor enabled={forced === null && fx === 'full'} />
           <GlowPulse theme={t} />

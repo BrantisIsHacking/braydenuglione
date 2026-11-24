@@ -19,25 +19,26 @@ export const RECORD_LOOK = { floor: 'hardwood', wall: 'brick', neon: 'warmGlow' 
 export const STACKS = { cols: 8, pitch: 3, rowPitch: 3, z0: -20, xEven: -11.25, xOdd: -9.75, bin: { w: 1.6, d: 0.8, h: 0.8 } } as const;
 export const SLEEVE = { size: 1.1, y: 0.8 + 0.55 } as const;
 
-/** Where the walk-in listening booth sits. The turntable and desk are props only: a click-to-load Spotify player can mount on `BOOTH.screen` later. */
+/** Where the walk-in listening booth sits. The turntable and desk are props only: the Frission playlist exhibit rings in front of it and its panel holds the click-to-load Spotify player. */
 export const BOOTH = { x: 9.5, z: -5, w: 2.4, d: 1.6, screen: [9.5, 1.9, -5.7] as [number, number, number] } as const;
 /** The front counter (west) with its turntable. */
 export const COUNTER = { x: -10, z: -6, w: 1.4, d: 5 } as const;
 /** The karaoke platform, behind its ring at `[5.5, -10]`. */
 export const STAGE_PLATFORM = { x: 7.75, z: -15.25, w: 7.5, d: 3.5, h: 0.5 } as const;
 
-export const SIGNS: readonly string[] = ['RECORDS', 'TOP 12', 'STAGE'];
+export const SIGNS: readonly string[] = ['RECORDS', 'TOP 12', 'STAGE', 'FRISSION'];
 
 export const SIGN_SPECS: readonly SignSpec[] = [
   { text: 'RECORDS', position: [-12.85, 2.5, -10], rotationY: Math.PI / 2, board: 'warmGlow' },
   { text: 'TOP 12', position: [-12.85, 2.4, -22], rotationY: Math.PI / 2, board: 'mustard', size: 0.4 },
   { text: 'STAGE', position: [12.85, 2.5, -15], rotationY: -Math.PI / 2, board: 'ink' },
+  { text: 'FRISSION', position: [BOOTH.screen[0], BOOTH.screen[1], BOOTH.screen[2] + 0.2], rotationY: 0, board: 'ink', size: 0.3 },
 ];
 
 /** Content-derived 3D text: none per sleeve (artist names live in the HTML prompt and panel). */
 export const TEXT_LINES: readonly string[] = [];
-/** 3D text objects: the signs plus at most two exhibit labels (music, karaoke). */
-export const TEXT_OBJECTS = SIGNS.length + 2;
+/** 3D text objects: the signs plus at most three exhibit labels (music, karaoke, frission). */
+export const TEXT_OBJECTS = SIGNS.length + 3;
 
 export type StackSlot = { index: number; artist: string; rank: number; row: number; col: number; pos: [number, number] };
 /** Artist i (rank i + 1) at its ring position; ranks 1 to 8 on the row nearest the entrance. */
@@ -121,7 +122,7 @@ export function buildBatches(): BatchSpec[] {
   cyl('ink', mx, 0.04, mz, 0.5, 0.08, 0.5);
   add('sphere', 'ink', { x: mx, y: 1.5, z: mz, sx: 0.24, sy: 0.24, sz: 0.24 });
 
-  // listening booth (east): desk, turntable, headphones, and an unlit screen frame for a future player
+  // listening booth (east): desk, turntable, headphones, and an dark screen frame (FRISSION sign above)
   box('ink', BOOTH.x, 0.5, BOOTH.z, BOOTH.w, 1.0, BOOTH.d);
   box('hardwood', BOOTH.x, 1.04, BOOTH.z, BOOTH.w + 0.2, 0.08, BOOTH.d + 0.2);
   cyl('ink', BOOTH.x - 0.5, 1.12, BOOTH.z + 0.1, 0.8, 0.06, 0.8);

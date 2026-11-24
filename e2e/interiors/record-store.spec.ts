@@ -29,6 +29,28 @@ test('deep links open the music panel and the karaoke station', async ({ page })
   await expect(page.getByRole('dialog', { name: /karaoke/i })).toBeVisible()
 })
 
+test('walk to the listening booth: Frission panel, no Spotify before Play, iframe after', async ({ page }) => {
+  const spotify: string[] = []
+  page.on('request', (r) => { if (/spotify/i.test(new URL(r.url()).hostname)) spotify.push(r.url()) })
+  await page.goto('/#/b/record-store')
+  await ready(page, 'record-store')
+  await settle(page)
+  await walkTo(page, 9.5, -3.4 + 1.5)
+  const prompt = page.getByTestId('prompt')
+  await expect(prompt).toHaveAttribute('data-exhibit', 'frission')
+  await page.keyboard.press('e')
+  const dialog = page.getByRole('dialog', { name: /frission/i })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('link', { name: 'Open in Spotify' })).toHaveAttribute('href', 'https://open.spotify.com/playlist/0CMrxtb1wc9P83qlrvmJ3o')
+  await expect(dialog.locator('iframe')).toHaveCount(0)
+  await page.waitForTimeout(500)
+  expect(spotify, spotify.join('\n')).toEqual([])
+  await dialog.getByRole('button', { name: 'Play Frission' }).click()
+  const frame = dialog.locator('iframe')
+  await expect(frame).toHaveAttribute('src', 'https://open.spotify.com/embed/playlist/0CMrxtb1wc9P83qlrvmJ3o')
+  await expect(frame).toHaveAttribute('title', 'Frission — Spotify playlist')
+})
+
 test('walk the stacks: the first stop opens the music panel on Drake', async ({ page }) => {
   await page.goto('/#/b/record-store')
   await ready(page, 'record-store')

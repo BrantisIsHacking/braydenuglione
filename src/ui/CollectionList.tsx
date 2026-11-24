@@ -9,11 +9,12 @@ const sortKey = titleSortKey;
 const FOCUS_CLASS = 'collection__item--focus';
 
 /** Props for the one list item whose key is the focus: `aria-current` (not colour alone), a class, and a ref to scroll to. */
-function useFocusItem(focus: string | null | undefined) {
+function useFocusItem(focus: string | null | undefined, token?: number) {
   const ref = useRef<HTMLLIElement | null>(null);
   useEffect(() => {
-    ref.current?.scrollIntoView?.({ block: 'center' });
-  }, [focus]);
+    // 'nearest' scrolls only the list's own scroller; 'center' would also move ancestors (the page) on mobile.
+    ref.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [focus, token]);
   return (key: string) => (focus != null && key === focus ? { ref, 'aria-current': 'true' as const, className: FOCUS_CLASS } : {});
 }
 
@@ -29,7 +30,7 @@ export function filterBooks(list: readonly Book[], q: string): Book[] {
   return list.filter((b) => b.title.toLowerCase().includes(n) || b.author.toLowerCase().includes(n));
 }
 
-function BookList({ books, focus }: { books: readonly Book[]; focus?: string | null }) {
+function BookList({ books, focus, focusToken }: { books: readonly Book[]; focus?: string | null; focusToken?: number }) {
   const [q, setQ] = useState('');
   const [seen, setSeen] = useState(focus);
   if (seen !== focus) {
@@ -37,7 +38,7 @@ function BookList({ books, focus }: { books: readonly Book[]; focus?: string | n
     setSeen(focus);
     if (focus != null) setQ('');
   }
-  const item = useFocusItem(focus);
+  const item = useFocusItem(focus, focusToken);
   const shown = filterBooks(sortBooks(books), seen !== focus ? '' : q);
   return (
     <>
@@ -64,13 +65,15 @@ function BookList({ books, focus }: { books: readonly Book[]; focus?: string | n
   );
 }
 
-export function CollectionList({ id, items, focus }: { id: CollectionId; items?: readonly unknown[]; focus?: string | null }) {
-  const item = useFocusItem(focus);
+/** `headingLevel` is the level of the sub-headings (teams by sport): one below the heading that introduces the list. */
+export function CollectionList({ id, items, focus, focusToken, headingLevel = 3 }: { id: CollectionId; items?: readonly unknown[]; focus?: string | null; focusToken?: number; headingLevel?: 3 | 4 | 5 }) {
+  const item = useFocusItem(focus, focusToken);
+  const H = `h${headingLevel}` as 'h3' | 'h4' | 'h5';
   const data = (items ?? getCollection(id)) as readonly unknown[];
   let body;
   switch (id) {
     case 'books':
-      body = <BookList books={data as readonly Book[]} focus={focus} />;
+      body = <BookList books={data as readonly Book[]} focus={focus} focusToken={focusToken} />;
       break;
     case 'films':
       body = (
@@ -104,7 +107,7 @@ export function CollectionList({ id, items, focus }: { id: CollectionId; items?:
       const sports = [...new Set(teams.map((t) => t.sport))];
       body = sports.map((s) => (
         <div key={s}>
-          <h4 className="collection__heading">{s}</h4>
+          <H className="collection__heading">{s}</H>
           <ul className="collection__list">
             {teams.filter((t) => t.sport === s).map((t) => (
               <li key={t.name} {...item(t.name)}>{t.name}</li>

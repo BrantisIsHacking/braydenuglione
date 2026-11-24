@@ -17,7 +17,7 @@ export const bx = (x: number, y: number, z: number, w: number, h: number, d: num
 export const SIGN_SPECS: readonly SignSpec[] = [
   { text: 'LECTURE HALL', position: [-7, 2.05, -15.9], board: 'scarlet', size: 0.35 },
   { text: 'JUDGING HALL', position: [0, 2.05, -15.9], board: 'scarlet', size: 0.35 },
-  { text: 'CLASSROOM', position: [7, 2.05, -15.9], board: 'scarlet', size: 0.35 },
+  { text: 'CLASSROOM', position: [7, 3.0, -15.9], board: 'scarlet', size: 0.35 },
   { text: 'CIVIC CENTER', position: [-6, 0.3, 0.36], board: 'scarlet', size: 0.2 },
   { text: 'TOUR DESK', position: [-4.6, 2.5, -7.14], board: 'ink', size: 0.25 },
   { text: 'MENTORSHIP BOARD', position: [-10.9, 2.75, -13], rotationY: Math.PI / 2, board: 'ink', size: 0.3 },

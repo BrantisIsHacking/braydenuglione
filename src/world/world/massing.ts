@@ -25,7 +25,8 @@ export function massingFor(id: BuildingId): MassBox[] {
   const out: MassBox[] = [box(x, h / 2, z, w - 2 * INSET, h, d - 2 * INSET, dist.wall), box(x, h + 0.15, z, w, 0.3, d, dist.trim === 'ink' ? 'slate' : dist.trim)];
   switch (id) {
     case 'hall-of-fame':
-      out.push(box(x - w / 2 + 0.6, (h + 0.3) / 2, south - 0.4, 0.8, h + 0.3, 0.8, 'stone'), box(x + w / 2 - 0.6, (h + 0.3) / 2, south - 0.4, 0.8, h + 0.3, 0.8, 'stone'));
+      // Pillars stand a hair above the roof slab top and a hair behind its front face, so no face shares a plane with it.
+      out.push(box(x - w / 2 + 0.6, (h + 0.34) / 2, south - 0.45, 0.8, h + 0.34, 0.8, 'stone'), box(x + w / 2 - 0.6, (h + 0.34) / 2, south - 0.45, 0.8, h + 0.34, 0.8, 'stone'));
       break;
     case 'campus-quad':
       out.push(box(x + w / 2 - 1.5, h + 1.8, z, 1.8, 3.6, 1.8, 'scarlet'));

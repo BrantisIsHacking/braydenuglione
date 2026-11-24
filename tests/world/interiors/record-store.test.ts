@@ -10,7 +10,7 @@ import {
 import { isFontSafe } from '../../../src/world/logic/fontSafe';
 import { interiorProblems } from '../../../src/world/logic/interior';
 import { uncovered } from '../../../src/world/logic/stops';
-import { TEXT_CAP } from '../../../src/world/logic/text';
+import { TEXT_CAP, textCount } from '../../../src/world/logic/text';
 
 describe('record store interior', () => {
   it('geometry is valid with every stop', () => {
@@ -61,6 +61,9 @@ describe('record store interior', () => {
   it('3D text stays under the cap and carries no artist names', () => {
     expect(TEXT_LINES).toEqual([]);
     expect(TEXT_OBJECTS).toBeLessThanOrEqual(TEXT_CAP);
+    expect(SIGNS).toContain('FRISSION');
+    expect(textCount({ signs: SIGN_SPECS.length, lines: TEXT_LINES.length, labelled: exhibitsIn('record-store').length })).toBeLessThanOrEqual(TEXT_CAP);
+    expect(TEXT_OBJECTS).toBe(textCount({ signs: SIGN_SPECS.length, lines: 0, labelled: exhibitsIn('record-store').length }));
   });
   it('instances the stacks into few batches', () => {
     const b = buildBatches();

@@ -62,9 +62,9 @@ describe('app routing', () => {
     expect(screen.queryByRole('button', { name: 'Explore' })).toBeNull()
     expect(window.sessionStorage.getItem(STARTED_KEY)).toBe('1')
   })
-  it("phone '' → Box Score with 45 cards; Explore goes to #/world", async () => {
+  it("phone '' → Box Score with 46 cards; Explore goes to #/world", async () => {
     const { container } = render(<App env={phone} />)
-    expect(cards(container)).toHaveLength(45)
+    expect(cards(container)).toHaveLength(46)
     fireEvent.click(screen.getByRole('button', { name: "Explore Brayden's World" }))
     expect(window.location.hash).toBe('#/world')
     await go('#/world')
@@ -73,7 +73,7 @@ describe('app routing', () => {
   it('phone #books → Box Score', () => {
     window.history.replaceState(null, '', '/#books')
     const { container } = render(<App env={phone} />)
-    expect(cards(container)).toHaveLength(45)
+    expect(cards(container)).toHaveLength(46)
   })
   it('no-webgl box score has no Explore button', () => {
     window.history.replaceState(null, '', '/#/box-score')
@@ -91,7 +91,7 @@ describe('app routing', () => {
   it('#/b/scouting-office → Box Score', () => {
     window.history.replaceState(null, '', '/#/b/scouting-office')
     const { container } = render(<App env={desktop} />)
-    expect(cards(container)).toHaveLength(45)
+    expect(cards(container)).toHaveLength(46)
     expect(screen.queryByTestId('world')).toBeNull()
   })
   it.each([
@@ -113,7 +113,7 @@ describe('app routing', () => {
     const FreshApp = await fresh()
     const { container } = render(<FreshApp env={desktop} />)
     expect(await screen.findByText(FAILURE, {}, { timeout: 5000 })).toBeTruthy()
-    expect(cards(container)).toHaveLength(45)
+    expect(cards(container)).toHaveLength(46)
   })
   it('RF1: world component throwing → Box Score with the failure notice', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})

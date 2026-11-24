@@ -20,3 +20,13 @@
 .collection__sub { color: var(--muted); }
 .contact__list { list-style: none; padding: 0; margin: 0 0 0.75rem; display: grid; gap: 0.375rem; }
 .collection__item--focus { border-left: 4px solid var(--scarlet); padding-left: 0.5rem; font-weight: 700; }
+
+.playlist { margin: 0 0 0.75rem; }
+.playlist__poster { display: grid; gap: 0.5rem; justify-items: start; padding: 1.25rem; min-height: 11rem; align-content: center; background: linear-gradient(135deg, #1a1a1a, #000); border: 1px solid var(--line); border-radius: 4px; border-left: 4px solid var(--scarlet); }
+.playlist__name { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; font-size: 2rem; line-height: 1; margin: 0; }
+.playlist__blurb { margin: 0; color: var(--muted); }
+.playlist__play { background: var(--scarlet); color: var(--paper); border: 0; border-radius: 999px; padding: 0.625rem 1.25rem; font: inherit; font-weight: 700; cursor: pointer; }
+.playlist__play:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+.playlist__frame { display: block; width: 100%; height: 352px; border: 0; border-radius: 12px; }
+.playlist__links { margin: 0.5rem 0 0.25rem; }
+.playlist__note { margin: 0; color: var(--muted); font-size: 0.8125rem; }

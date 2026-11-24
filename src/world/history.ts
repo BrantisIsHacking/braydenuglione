@@ -99,6 +99,8 @@ export type HistoryDeps = {
   exitPose(id: BuildingId): Pose;
   spotPose(id: BuildingId): Pose;
   toBoxScore(): void;
+  /** The player's live outdoor pose. Fast travel to a spot stores it in the history entry it leaves, so Back restores it. */
+  livePose?(): Pose;
   /** Reduced motion: scene changes skip the fade-out. */
   reducedMotion?: boolean;
 };
@@ -171,11 +173,27 @@ export function createHistorySync(d: HistoryDeps): HistorySync {
       else s.closePanel();
     });
 
+  /** The pre-travel pose stored on a history entry by `travel` (world to spot), if any. */
+  const storedPose = (): Pose | null => {
+    const v = (win.history.state as { pose?: Partial<Pose> } | null)?.pose;
+    return v && Number.isFinite(v.x) && Number.isFinite(v.z) && Number.isFinite(v.heading) ? (v as Pose) : null;
+  };
+
   const onNav = () => {
     const hash = win.location.hash;
     if (hash === current) return;
     current = hash;
-    const p = plan(parseSafe(hash));
+    const route = parseSafe(hash);
+    const back = storedPose();
+    if (back && (route.view === 'auto' || route.view === 'world')) {
+      // Back to the entry a spot fast-travel left: return to where the player stood, not to the stale saved pose.
+      const target: Target = { scene: { kind: 'world' }, pose: back, panelId: null };
+      const s = store.getState();
+      const at = s.pending ? sameTarget(target, s.pending) : s.scene.kind === 'world' && d.livePose && samePose(d.livePose(), back);
+      if (!at) applyGo(target, false);
+      return;
+    }
+    const p = plan(route);
     if (p.kind === 'go') applyGo(p.target, false);
     else if (p.kind === 'panel') applyPanel(p.panelId);
     else if (p.kind === 'none' && store.getState().activeFocus !== null) applyPanel(store.getState().activeId); // same panel re-requested: drop the stale focus
@@ -209,6 +227,15 @@ export function createHistorySync(d: HistoryDeps): HistorySync {
       const p = plan(parseSafe(hash));
       if (p.kind === 'boxscore') d.toBoxScore();
       else if (p.kind === 'go') {
+        const s = store.getState();
+        const leaving = s.scene.kind === 'world' && s.pending === null && s.phase === 'idle' ? d.livePose?.() : undefined;
+        if (leaving && p.target.scene.kind === 'world') {
+          // Spot to spot or world to spot: remember where the player stood so Back can return there.
+          win.history.replaceState({ pose: { x: leaving.x, z: leaving.z, heading: leaving.heading } }, '', win.location.hash);
+        } else if (storedPose()) {
+          // A different departure from this entry (a door): Back must use the door's exit pose, not an older stored one.
+          win.history.replaceState(null, '', win.location.hash);
+        }
         write('push', hashFor(p.target.scene, p.target.panelId));
         applyGo(p.target, false);
       } else if (p.kind === 'panel') {

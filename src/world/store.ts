@@ -13,6 +13,8 @@ export type WorldState = {
   nearFocus: string | null;
   /** Collection key the open panel highlights. */
   activeFocus: string | null;
+  /** Bumped on every openPanel that carries a focus, so re-requesting the same focus can scroll back to it. */
+  focusSeq: number;
   nearestId: string | null;
   visited: string[];
   spawn: { pose: Pose; seq: number };
@@ -67,6 +69,7 @@ export function createWorldStore(storage: Storage | null): WorldStore {
     nearId: null,
     nearFocus: null,
     activeFocus: null,
+    focusSeq: 0,
     nearestId: null,
     visited: loadVisited(storage, valid),
     spawn: { pose: { ...SPAWN_POSE }, seq: 0 },
@@ -89,11 +92,11 @@ export function createWorldStore(storage: Storage | null): WorldStore {
       if (!getExhibit(id)) return;
       const { visited } = get();
       if (visited.includes(id) || visited.length >= EXHIBIT_COUNT) {
-        set({ activeId: id, activeFocus: focus ?? null });
+        set({ activeId: id, activeFocus: focus ?? null, focusSeq: focus != null ? get().focusSeq + 1 : get().focusSeq });
         return;
       }
       const next = [...visited, id];
-      set({ activeId: id, activeFocus: focus ?? null, visited: next });
+      set({ activeId: id, activeFocus: focus ?? null, visited: next, focusSeq: focus != null ? get().focusSeq + 1 : get().focusSeq });
       saveVisited(storage, next);
     },
     closePanel: () => {

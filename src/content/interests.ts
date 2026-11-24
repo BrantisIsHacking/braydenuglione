@@ -91,6 +91,14 @@ export const interests: Interest[] = [
     collection: 'artists',
   },
   {
+    id: 'frission',
+    building: 'record-store',
+    pos: [9.5, -3.4],
+    title: 'Frission',
+    oneLiner: 'My whole music taste',
+    playlist: { spotifyId: '0CMrxtb1wc9P83qlrvmJ3o', name: 'Frission' },
+  },
+  {
     id: 'stranger-things',
     building: 'playhouse',
     pos: [0, -11],

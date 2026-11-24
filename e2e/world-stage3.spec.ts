@@ -16,7 +16,7 @@ async function near(page: Page, want: { x: number; z: number }, message: string,
     .toBeLessThan(tol)
 }
 
-// The 13 interests: where each deep link lands (literal table, not derived from content).
+// The 14 interests: where each deep link lands (literal table, not derived from content).
 const INTERESTS: { id: string; scene: string; floor?: number; title: RegExp; spot?: BuildingId }[] = [
   { id: 'basketball', scene: 'gym', title: /varsity basketball/i },
   { id: 'golf', scene: 'golf-clubhouse', floor: 1, title: /varsity golf/i },
@@ -29,6 +29,7 @@ const INTERESTS: { id: string; scene: string; floor?: number; title: RegExp; spo
   { id: 'movies', scene: 'cinema', title: /movies/i },
   { id: 'books', scene: 'library', title: /books/i },
   { id: 'music', scene: 'record-store', title: /music/i },
+  { id: 'frission', scene: 'record-store', title: /frission/i },
   { id: 'karaoke', scene: 'record-store', title: /karaoke/i },
   { id: 'stranger-things', scene: 'playhouse', title: /stranger things/i },
 ]
@@ -40,7 +41,7 @@ test.describe('stage 3 interests (desktop)', () => {
   test('every interest deep link lands home with its panel', async ({ page }) => {
     test.setTimeout(240_000)
     const errors = trackErrors(page)
-    expect(INTERESTS).toHaveLength(13)
+    expect(INTERESTS).toHaveLength(14)
     for (const it of INTERESTS) {
       await page.goto(`/#${it.id}`)
       await page.reload()

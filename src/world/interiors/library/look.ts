@@ -124,7 +124,7 @@ export const SPEC: InteriorSpec = {
     propCollider(TABLE_POS, TABLE.w, TABLE.d),
     ...READING_COLLIDERS,
   ],
-  cameraDistance: 17,
+  cameraDistance: 18,
   cameraSouthPad: 0.5,
 };
 

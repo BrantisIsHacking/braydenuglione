@@ -16,21 +16,33 @@ export function StartScreen({ onExplore, touch = false }: { onExplore: () => voi
       </p>
       <h1 className="tipoff__name">Brayden&apos;s World</h1>
       <p className="start__owner">{profile.name}</p>
+      <p className="start__role">SWE · Data Science · ML · Rutgers Honors College</p>
       <p className="tipoff__tagline">{profile.tagline}</p>
       <p className="tipoff__targets">{profile.targets}</p>
       <div className="start__actions">
-        <button type="button" className="tipoff__go" autoFocus onClick={onExplore}>
-          Explore
-        </button>
-        <button
-          type="button"
-          className="start__report"
-          onClick={() => {
-            window.location.hash = '#/box-score';
-          }}
-        >
-          Scouting Report
-        </button>
+        <div className="start__choice">
+          <button type="button" className="tipoff__go" autoFocus onClick={onExplore} aria-describedby="start-explore-cap">
+            Explore
+          </button>
+          <p className="start__cap" id="start-explore-cap">
+            Walk around my 3D portfolio
+          </p>
+        </div>
+        <div className="start__choice">
+          <button
+            type="button"
+            className="start__report"
+            aria-describedby="start-report-cap"
+            onClick={() => {
+              window.location.hash = '#/box-score';
+            }}
+          >
+            Scouting Report
+          </button>
+          <p className="start__cap" id="start-report-cap">
+            In a hurry? Experience, projects and contact on one page
+          </p>
+        </div>
       </div>
       <p className="tipoff__hint">
         {touch ? 'Drag the pad to move · tap Interact to open' : 'W A S D / arrows to move · E to open · M for the map'}

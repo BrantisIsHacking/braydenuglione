@@ -44,9 +44,14 @@ test.describe('draw-call budgets (desktop)', () => {
 
 test.describe('no cross-origin requests (desktop)', () => {
   test.beforeEach(skipUnless('desktop'))
-  test('tour world, gym and three panels stays same-origin; YouTube only after the play click', async ({ page, baseURL }) => {
+  test('tour world, gym and three panels stays same-origin; Spotify and YouTube only after their play clicks', async ({ page, baseURL }) => {
     const errors = trackErrors(page)
     const external = trackExternal(page, baseURL!)
+    // Requests made by the site itself (main frame); the Spotify iframe's own telemetry and assets are not ours to police.
+    const ownFrame: string[] = []
+    page.on('request', (r) => {
+      if (/^https?:/.test(r.url()) && new URL(r.url()).origin !== new URL(baseURL!).origin && r.frame() === page.mainFrame()) ownFrame.push(r.url())
+    })
     await page.goto('/')
     await page.getByRole('button', { name: 'Explore' }).click()
     await ready(page, 'world')
@@ -58,12 +63,23 @@ test.describe('no cross-origin requests (desktop)', () => {
     await page.goto('/#movies')
     await ready(page, 'cinema')
     await expect(page.getByRole('dialog', { name: /movies/i })).toBeVisible()
+    await page.goto('/#frission')
+    await ready(page, 'record-store')
+    const spotify = page.getByRole('dialog', { name: /frission/i })
+    await expect(spotify).toBeVisible()
+    await expect(spotify.locator('iframe')).toHaveCount(0)
+    await page.waitForTimeout(500)
+    expect(external, external.join('\n')).toEqual([])
+    await spotify.getByRole('button', { name: 'Play Frission' }).click()
+    await expect(spotify.locator('iframe')).toHaveAttribute('src', 'https://open.spotify.com/embed/playlist/0CMrxtb1wc9P83qlrvmJ3o')
+    await page.waitForTimeout(1500)
+    external.length = 0
     await page.goto('/#critics-choice')
     await ready(page, 'campus-quad')
     const dialog = page.getByRole('dialog', { name: /critic/i })
     await expect(dialog).toBeVisible()
     await page.waitForTimeout(500)
-    expect(external, external.join('\n')).toEqual([])
+    expect(ownFrame, ownFrame.join('\n')).toEqual([])
 
     const play = dialog.getByRole('button', { name: /^Play/ })
     await expect(play).toBeVisible()
@@ -71,8 +87,8 @@ test.describe('no cross-origin requests (desktop)', () => {
     await expect(dialog.locator('iframe')).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\//)
     await page.waitForTimeout(1500)
     const hosts = new Set(external.map((u) => new URL(u).hostname))
-    for (const h of hosts) expect(h, `unexpected external host ${h}`).toMatch(/(^|\.)(youtube-nocookie\.com|ytimg\.com)$|google|gstatic|ggpht/)
-    const own = errors.filter((e) => !/youtube|google|ERR_|Failed to load resource/i.test(e))
+    for (const h of hosts) expect(h, `unexpected external host ${h}`).toMatch(/(^|\.)(youtube-nocookie\.com|ytimg\.com|spotify\.com|scdn\.co|spotifycdn\.com)$|google|gstatic|ggpht/)
+    const own = errors.filter((e) => !/youtube|spotify|google|ERR_|Failed to load resource/i.test(e))
     expect(own, own.join('\n')).toEqual([])
   })
 })
@@ -84,7 +100,7 @@ test.describe('reduced motion (desktop)', () => {
   test('Box Score default, Explore enters a still, fade-free world', async ({ page }) => {
     const errors = trackErrors(page)
     await page.goto('/')
-    await expect(page.locator('[data-exhibit]')).toHaveCount(45)
+    await expect(page.locator('[data-exhibit]')).toHaveCount(46)
     await page.getByRole('button', { name: /Explore Brayden.s World/ }).click()
     await ready(page, 'world')
     await expect(page.locator(WORLD)).toHaveAttribute('data-motion', 'reduced')
@@ -134,7 +150,7 @@ test.describe('mobile (Pixel 7)', () => {
   test('Box Score default; Explore enters the world with joystick and no prompt', async ({ page }) => {
     const errors = trackErrors(page)
     await page.goto('/')
-    await expect(page.locator('[data-exhibit]')).toHaveCount(45)
+    await expect(page.locator('[data-exhibit]')).toHaveCount(46)
     await expect(page.locator('[data-station]')).toHaveCount(24)
     await page.getByRole('button', { name: /Explore Brayden.s World/ }).click()
     await ready(page, 'world')
@@ -146,7 +162,7 @@ test.describe('mobile (Pixel 7)', () => {
   test('deep link /#books scrolls the Box Score to the books card', async ({ page }) => {
     const errors = trackErrors(page)
     await page.goto('/#books')
-    await expect(page.locator('[data-exhibit]')).toHaveCount(45)
+    await expect(page.locator('[data-exhibit]')).toHaveCount(46)
     await expect(page.locator('#books')).toBeInViewport()
     expect(errors, errors.join('\n')).toEqual([])
   })

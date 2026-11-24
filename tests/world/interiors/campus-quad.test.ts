@@ -21,7 +21,7 @@ describe('campus quad', () => {
     expect(g.cameraDistance).toBe(SPEC.cameraDistance);
     expect(g.cameraSouthPad).toBe(SPEC.cameraSouthPad);
     expect(SPEC.cameraDistance).toBeGreaterThanOrEqual(12);
-    expect(SPEC.cameraDistance).toBeLessThanOrEqual(18);
+    expect(SPEC.cameraDistance).toBeLessThanOrEqual(19);
     expect(SPEC.cameraSouthPad!).toBeGreaterThanOrEqual(0.5);
     expect(SPEC.cameraSouthPad!).toBeLessThanOrEqual(2);
   });

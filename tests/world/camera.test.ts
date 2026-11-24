@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cameraOffset, cameraDistance, zoomStep, viewHalfExtents, clampFocus, followFocus, smoothing } from '../../src/world/logic/camera';
+import { cameraOffset, cameraDistance, zoomStep, viewHalfExtents, clampFocus, followFocus, smoothing, portraitPullback, hudShiftPx } from '../../src/world/logic/camera';
 
 const MAP_LIKE = { minX: -48, maxX: 48, minZ: -40, maxZ: 40 };
 
@@ -33,5 +33,20 @@ describe('camera', () => {
     expect(smoothing(0.016, true)).toBe(1);
     const s = smoothing(0.016, false);
     expect(s).toBeGreaterThan(0); expect(s).toBeLessThan(1);
+  });
+});
+
+describe('portrait framing', () => {
+  it('pulls back only below the portrait aspect, capped', () => {
+    expect(portraitPullback(1.6)).toBe(1);
+    expect(portraitPullback(0.85)).toBe(1);
+    expect(portraitPullback(412 / 839)).toBeGreaterThan(1.2);
+    expect(portraitPullback(0.1)).toBeLessThanOrEqual(1.45);
+    expect(portraitPullback(0)).toBe(1);
+  });
+  it('HUD shift is taller in portrait and bounded by the height', () => {
+    expect(hudShiftPx(1280, 800, 60)).toBe(60);
+    expect(hudShiftPx(412, 839, 60)).toBe(100);
+    expect(hudShiftPx(300, 700, 60)).toBe(91);
   });
 });

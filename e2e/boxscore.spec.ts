@@ -11,12 +11,12 @@ async function open(page: import('@playwright/test').Page, url: string) {
   const errors = trackErrors(page)
   await page.goto(url, { waitUntil: 'load' })
   await expect(page.locator('[data-station]')).toHaveCount(24)
-  await expect(page.locator('[data-exhibit]')).toHaveCount(45)
+  await expect(page.locator('[data-exhibit]')).toHaveCount(46)
   await page.waitForLoadState('networkidle')
   return errors
 }
 
-test('loads with h1, 45 exhibits (24 stations), no console errors', async ({ page }) => {
+test('loads with h1, 46 exhibits (24 stations), no console errors', async ({ page }) => {
   const errors = await open(page, '/#/box-score')
   await expect(page.getByRole('heading', { level: 1, name: 'Brayden Uglione' })).toBeVisible()
   expect(errors, errors.join('\n')).toEqual([])
@@ -51,7 +51,7 @@ test('no horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 })
   await page.goto('/#/box-score')
   await expect(page.locator('[data-station]')).toHaveCount(24)
-  await expect(page.locator('[data-exhibit]')).toHaveCount(45)
+  await expect(page.locator('[data-exhibit]')).toHaveCount(46)
   const o = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
   expect(o).toBe(true)
 })

@@ -14,22 +14,32 @@ beforeEach(() => {
 })
 
 describe('Box Score page', () => {
-  it('renders 24 station cards and filters by category', () => {
+  it('renders 24 station cards grouped into recruiter-ordered sections', () => {
     const { container } = render(<App />)
     expect(container.querySelectorAll('[data-station]')).toHaveLength(24)
-    fireEvent.click(screen.getByRole('button', { name: 'Projects' }))
-    expect(container.querySelectorAll('[data-station]')).toHaveLength(5)
-    fireEvent.click(screen.getByRole('button', { name: 'All' }))
-    expect(container.querySelectorAll('[data-station]')).toHaveLength(24)
+    const h2 = [...container.querySelectorAll('main h2')].map((h) => h.textContent)
+    expect(h2).toEqual(['About', 'Experience', 'Projects', 'Leadership', 'Education', 'Awards', 'Off the clock', 'Contact'])
+    expect(container.querySelectorAll('#section-projects [data-station]')).toHaveLength(5)
+    expect(container.querySelectorAll('#section-experience [data-station]')).toHaveLength(6)
+    expect(container.querySelectorAll('#section-education [data-station]')).toHaveLength(8)
   })
 
   it('lists 7 Hall of Fame banners and the contact email', () => {
     const { container } = render(<App />)
-    const hof = container.querySelector('#section-hall-of-fame') as HTMLElement
-    expect(within(hof).getByRole('heading', { name: 'Hall of Fame' })).toBeTruthy()
+    const hof = container.querySelector('#section-awards') as HTMLElement
+    expect(within(hof).getByRole('heading', { name: 'Awards' })).toBeTruthy()
     expect(within(hof).getAllByRole('listitem')).toHaveLength(7)
     const mail = screen.getAllByRole('link').filter((a) => a.getAttribute('href') === 'mailto:uglionebrayden@gmail.com')
     expect(mail.length).toBeGreaterThan(0)
+  })
+
+  it('Off the clock carries the Frission player with click-to-load', () => {
+    const { container } = render(<App />)
+    const card = container.querySelector('[data-exhibit="frission"]') as HTMLElement
+    expect(card.closest('section')?.textContent).toContain('Off the clock')
+    expect(card.querySelector('iframe')).toBeNull()
+    fireEvent.click(within(card).getByRole('button', { name: 'Play Frission' }))
+    expect(card.querySelector('iframe')?.getAttribute('src')).toBe('https://open.spotify.com/embed/playlist/0CMrxtb1wc9P83qlrvmJ3o')
   })
 
   it('renders every exhibit once, with the new sections', () => {
@@ -39,17 +49,11 @@ describe('Box Score page', () => {
     expect(new Set(ids).size).toBe(EXHIBIT_COUNT)
     expect(new Set(ids)).toEqual(new Set(exhibits.map((e) => e.id)))
     for (const id of ids) expect(container.querySelector(`#${id}`)).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'Hall of Fame' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Awards' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Off the clock' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Contact' })).toBeTruthy()
     for (const gone of ['Locker Room', 'Rafters', 'Press Table']) expect(screen.queryByText(gone)).toBeNull()
     expect(screen.getByText('Books on the shelf (75)')).toBeTruthy()
-  })
-
-  it('filtering to projects keeps Hall of Fame', () => {
-    render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: 'Projects' }))
-    expect(screen.getByRole('heading', { name: 'Hall of Fame' })).toBeTruthy()
   })
 
   it('#books scrolls the interest into view', () => {

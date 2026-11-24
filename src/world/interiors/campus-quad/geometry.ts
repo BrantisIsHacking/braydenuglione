@@ -15,7 +15,7 @@ const backed = (x: number): Rect => ({ x, z: -18.4, w: 3, d: 3.2 });
 export const SPEC: InteriorSpec = {
   width: 26,
   length: 20,
-  cameraDistance: 18,
+  cameraDistance: 19, // wide enough that the robotics label at the west wall clears the left edge at 16:10
   cameraSouthPad: 1.2,
   colliders: [
     ...HEDGE,

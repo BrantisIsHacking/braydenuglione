@@ -1,6 +1,6 @@
 # Brayden Uglione: portfolio
 
-A portfolio site built as a basketball-arena "box score". Each project, job, and activity is a station with a one-liner, a few bullets, a stat, and links, and you can filter and deep-link to any of them (for example `/#tranquility-base`). A 3D version, Brayden's World, reuses the same content.
+A portfolio site built as a basketball-arena "box score". Each project, job, and activity is a station with a one-liner, a few bullets, a stat, and links, and you can deep-link to any of them (for example `/#tranquility-base`). A 3D version, Brayden's World, reuses the same content.
 
 Live site: https://braydenuglione.pages.dev
 
@@ -15,6 +15,7 @@ Stack: Vite, React 18, TypeScript. Tests: Vitest (unit) and Playwright (end to e
 | `npm test` | Unit tests (Vitest) |
 | `npm run e2e` | Playwright tests; builds and serves `dist` on port 4173 itself |
 | `npm run media` | Regenerates `public/media` and `public/og.png` from source images |
+| `npm run og` | Regenerates only `public/og.png` (the 1200x630 social card) from the headshot |
 
 `npm run media` needs a private `_source/` folder of original images. It is gitignored and not in this repo, so this command only works on the owner's machine. The generated files in `public/media` are committed, so a normal clone can build and deploy without it.
 
@@ -28,9 +29,9 @@ When `BASE_URL` is set, the local server is skipped.
 
 ## Brayden's World
 
-The portfolio is also a small 3D town you walk around (top-down camera, one shared canvas). The outdoor map has the Scouting Office (opens the Box Score), the Hall of Fame, a Press Desk (contact), and a ring of buildings and spots. Doors on a building's south face open its interior. Thirteen interiors are bespoke: the Gym, the Workshop (projects), HQ Tower (jobs, four floors with an elevator), Civic Center (leadership and community), Campus Quad (college and high school), Hall of Fame (awards and the Critic's Choice mirror), the Cinema (poster hallway and theater), the Library (every book shelved, a favorites table), the Arcade (a cabinet per game), the Record Store (a sleeve stop per artist, karaoke stage), the Playhouse (marquee, curtain, stage), the Fan Shop (team-coloured jerseys and scarves, no logos) and the Golf Clubhouse (a clubhouse plus a nine-hole mini course at `#/b/golf-clubhouse/2`). The generic Exhibit Hall (a row of pedestals, one per exhibit) is now only the data-only fallback for a building with no registry entry. The outdoor town also has the interest-district exteriors, the Chess Park, the Park and the 5K loop as outdoor spots. There are 45 exhibits in all: 24 stations, 7 banners, 13 interests and the contact card. The same content powers the 2D Box Score.
+The portfolio is also a small 3D town you walk around (top-down camera, one shared canvas). The outdoor map has the Scouting Office (opens the Box Score), the Hall of Fame, a Press Desk (contact), and a ring of buildings and spots. Doors on a building's south face open its interior. Thirteen interiors are bespoke: the Gym, the Workshop (projects), HQ Tower (jobs, four floors with an elevator), Civic Center (leadership and community), Campus Quad (college and high school), Hall of Fame (awards and the Critic's Choice mirror), the Cinema (poster hallway and theater), the Library (every book shelved, a favorites table), the Arcade (a cabinet per game), the Record Store (a sleeve stop per artist, karaoke stage), the Playhouse (marquee, curtain, stage), the Fan Shop (team-coloured jerseys and scarves, no logos) and the Golf Clubhouse (a clubhouse plus a nine-hole mini course at `#/b/golf-clubhouse/2`). The generic Exhibit Hall (a row of pedestals, one per exhibit) is now only the data-only fallback for a building with no registry entry. The outdoor town also has the interest-district exteriors, the Chess Park, the Park and the 5K loop as outdoor spots. There are 46 exhibits in all: 24 stations, 7 banners, 14 interests and the contact card. The same content powers the 2D Box Score, the recruiter view: a sticky name/nav column and sections in the order About, Experience, Projects, Leadership, Education, Awards, Off the clock, Contact, with every card linking to its primary link.
 
-Controls: W A S D or arrow keys to move; E, Enter or Space to open the nearby exhibit; M for the Map (fast travel); `+` / `-`, the mouse wheel or a two-finger pinch to zoom; Escape closes a panel or the Map. Letter keys only act while the world (or the page body) has focus, so typing in a filter never moves the player. On touch devices use the on-screen joystick and the Interact button. `Skip to box score` is the first tab stop.
+Controls: W A S D or arrow keys to move; E, Enter or Space to open the nearby exhibit; M for the Map (fast travel); `+` / `-`, the mouse wheel or a two-finger pinch to zoom; Escape closes a panel or the Map. Letter keys only act while the world (or the page body) has focus, so typing in a field never moves the player. On touch devices use the on-screen joystick and the Interact button. `Skip to box score` is the first tab stop.
 
 Routes (hash based, parsed by `src/routing/routes.ts`):
 

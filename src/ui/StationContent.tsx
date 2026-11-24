@@ -18,8 +18,8 @@ export function formatRange(start: string, end: string): string {
   return a === b ? a : `${a} – ${b}`;
 }
 
-export function StationContent({ station: s, headingLevel }: { station: Station; headingLevel: 2 | 3 }) {
-  const H = `h${headingLevel}` as 'h2' | 'h3';
+export function StationContent({ station: s, headingLevel }: { station: Station; headingLevel: 2 | 3 | 4 }) {
+  const H = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
   const meta = [s.org, s.role, formatRange(s.start, s.end)].filter(Boolean).join(' · ');
   return (
     <article className="station">

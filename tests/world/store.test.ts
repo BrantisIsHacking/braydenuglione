@@ -36,9 +36,9 @@ describe('world store', () => {
     const s = createWorldStore(fake(JSON.stringify(['tranquility-base', 'gone', 'books'])));
     expect(s.getState().visited).toEqual(['tranquility-base', 'books']);
   });
-  it('visited loads up to all 45 exhibit ids', () => {
+  it('visited loads up to all 46 exhibit ids', () => {
     const ids = exhibits.map((e) => e.id);
-    expect(ids).toHaveLength(45);
+    expect(ids).toHaveLength(46);
     const s = createWorldStore(fake(JSON.stringify([...ids, 'extra', ids[0]])));
     expect(s.getState().visited).toHaveLength(EXHIBIT_COUNT);
     expect(s.getState().visited).toEqual(ids);
@@ -260,6 +260,15 @@ describe('activeFocus', () => {
     store.getState().openPanel('games', 'Halo');
     store.getState().go({ scene: { kind: 'world' }, pose: null, panelId: null });
     expect(store.getState().activeFocus).toBeNull();
+  });
+  it('focusSeq bumps on every focused open, even for the same focus', () => {
+    const store = createWorldStore(null);
+    store.getState().openPanel('games', 'Halo');
+    const n = store.getState().focusSeq;
+    store.getState().openPanel('games', 'Halo');
+    expect(store.getState().focusSeq).toBe(n + 1);
+    store.getState().openPanel('games');
+    expect(store.getState().focusSeq).toBe(n + 1);
   });
   it('setProximity is idempotent including focus', () => {
     const store = createWorldStore(null);

@@ -22,7 +22,7 @@ for (const [b, ids] of Object.entries({
   'golf-clubhouse': 'golf',
   library: 'books',
   cinema: 'movies',
-  'record-store': 'music karaoke',
+  'record-store': 'music frission karaoke',
   playhouse: 'stranger-things',
   arcade: 'rocket-league fifa games',
   'fan-shop': 'teams',
@@ -37,14 +37,14 @@ describe('content model', () => {
     expect(new Set(ids).size).toBe(ids.length);
     ids.forEach((id) => expect(id).toMatch(KEBAB));
   });
-  it('has 45 exhibits: stations, banners, interests, contact in order', () => {
-    expect(EXHIBIT_COUNT).toBe(45);
+  it('has 46 exhibits: stations, banners, interests, contact in order', () => {
+    expect(EXHIBIT_COUNT).toBe(46);
     expect(exhibits.map((e) => e.type)).toEqual([
       ...stations.map(() => 'station'), ...banners.map(() => 'banner'), ...interests.map(() => 'interest'), 'contact',
     ]);
   });
-  it('every one of the 45 exhibits has its contract home building', () => {
-    expect(Object.keys(HOMES)).toHaveLength(45);
+  it('every one of the 46 exhibits has its contract home building', () => {
+    expect(Object.keys(HOMES)).toHaveLength(46);
     for (const e of exhibits) expect(homeBuilding(e.id), e.id).toBe(HOMES[e.id]);
   });
   it('stations sit in their contract building, which is an interior', () => {
@@ -104,7 +104,7 @@ describe('content model', () => {
   it('stage-3 positions match the contract table', () => {
     const POS: Record<string, [number, number]> = {
       'library/books': [0, -8], 'arcade/rocket-league': [-7.5, -8], 'arcade/fifa': [-4.5, -8], 'arcade/games': [8.5, -3.5],
-      'record-store/music': [-4, -11], 'record-store/karaoke': [5.5, -10], 'playhouse/stranger-things': [0, -11],
+      'record-store/music': [-4, -11], 'record-store/karaoke': [5.5, -10], 'record-store/frission': [9.5, -3.4], 'playhouse/stranger-things': [0, -11],
       'fan-shop/teams': [0, -6], 'golf-clubhouse/golf': [-4, -7],
     };
     const got: Record<string, [number, number]> = {};
@@ -180,7 +180,7 @@ describe('content model', () => {
       expect(exhibitsIn('hq-tower').some((p) => !p.mirror && p.floor === f.n), `floor ${f.n}`).toBe(true);
   });
   it('signs use the allow-list or the Brayden prefix', () => {
-    expect(SIGN_ALLOW_LIST).toHaveLength(45);
+    expect(SIGN_ALLOW_LIST).toHaveLength(46);
     for (const t of ['FAVORITES', 'STAGE', 'TOP 12', 'BOX OFFICE', 'JERSEYS', 'SCARVES', 'PRO SHOP', 'TO THE COURSE', '9 HOLES', '5K loop']) expect(SIGN_ALLOW_LIST).toContain(t);
     expect(SIGN_ALLOW_LIST).not.toContain('5K LOOP');
     expect(getBuilding('running-loop')?.sign).toBe('5K loop');
@@ -189,6 +189,18 @@ describe('content model', () => {
       expect(SIGN_ALLOW_LIST).toContain(s);
     for (const f of floorsOf('hq-tower')) expect(SIGN_ALLOW_LIST).toContain(f.sign);
     for (const b of buildings) expect(SIGN_ALLOW_LIST.includes(b.sign) || /^Brayden's /.test(b.sign), b.id).toBe(true);
+  });
+  it('frission: the Spotify playlist exhibit sits at the record-store booth', () => {
+    const e = getExhibit('frission');
+    expect(e?.type).toBe('interest');
+    expect(homeBuilding('frission')).toBe('record-store');
+    const i = interests.find((x) => x.id === 'frission')!;
+    expect(i.title).toBe('Frission');
+    expect(i.oneLiner).toBe('My whole music taste');
+    expect(i.playlist).toEqual({ spotifyId: '0CMrxtb1wc9P83qlrvmJ3o', name: 'Frission' });
+    expect(i.pos).toEqual([9.5, -3.4]);
+    expect(SIGN_ALLOW_LIST).toContain('FRISSION');
+    expect(exhibits.filter((x) => x.id === 'frission')).toHaveLength(1);
   });
   it('accents are theme colors', () => {
     for (const b of buildings) expect(Object.keys(theme.accents), b.id).toContain(b.accent);

@@ -13,7 +13,7 @@ describe('Hud', () => {
     const tabbable = Array.from(document.querySelectorAll<HTMLElement>('a[href],button')).map((e) => e.textContent);
     expect(tabbable).toEqual(['Skip to box score', 'Scouting Office', 'Map']);
     expect(screen.getByRole('link', { name: 'Skip to box score' })).toHaveAttribute('href', '#/box-score');
-    expect(screen.getByText('Exhibits visited 0/45')).toBeInTheDocument();
+    expect(screen.getByText('Exhibits visited 0/46')).toBeInTheDocument();
     expect(screen.getByText("Brayden's World")).toBeInTheDocument();
   });
   it('shows the building name in an interior', () => {

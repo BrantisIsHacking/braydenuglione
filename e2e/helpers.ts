@@ -61,11 +61,12 @@ export async function holdUntil(
 }
 
 /**
- * Whole-frame draw calls of the current scene, refreshed every 30 frames. Waits until the value is
+ * Whole-frame draw calls of the current scene, refreshed every 30 frames. Settles the transition and pose first, then waits until the value is
  * non-zero and unchanged across four reads 400 ms apart, so a half-built scene (lazy models, late
  * instances) is never measured.
  */
 export async function drawCalls(page: Page): Promise<number> {
+  await settle(page)
   const read = async () => Number((await page.locator(WORLD).getAttribute('data-draw-calls')) || 0)
   await expect.poll(read, { timeout: 30_000 }).toBeGreaterThan(0)
   let last = -1
@@ -97,16 +98,22 @@ export async function settle(page: Page): Promise<void> {
     .toBe(true)
 }
 
-/** Walks to (x, z) with the arrow keys: x first, then z, each released within `tol` metres. Walls and props may stop you short. */
+/**
+ * Walks to (x, z) with the arrow keys: x first, then z, each released within `tol` metres. Walls and props may stop you short.
+ * `data-pose` only updates every 6 frames, so a slow frame rate overshoots the release point; each axis therefore settles and
+ * walks back (up to three passes) when it ended more than `tol` from the target, instead of leaving the player beside a prop.
+ */
 export async function walkTo(page: Page, x: number, z: number, tol = 0.35): Promise<void> {
-  const p0 = await pose(page)
-  if (Math.abs(x - p0.x) > tol) {
-    const right = x > p0.x
-    await holdUntil(page, right ? 'ArrowRight' : 'ArrowLeft', `(p) => ${right ? `p.x >= ${x - tol}` : `p.x <= ${x + tol}`}`)
-  }
-  const p1 = await pose(page)
-  if (Math.abs(z - p1.z) > tol) {
-    const down = z > p1.z
-    await holdUntil(page, down ? 'ArrowDown' : 'ArrowUp', `(p) => ${down ? `p.z >= ${z - tol}` : `p.z <= ${z + tol}`}`)
+  for (const axis of ['x', 'z'] as const) {
+    const target = axis === 'x' ? x : z
+    for (let pass = 0; pass < 3; pass++) {
+      const p = await pose(page)
+      if (Math.abs(target - p[axis]) <= tol) break
+      const up = target > p[axis]
+      const key = axis === 'x' ? (up ? 'ArrowRight' : 'ArrowLeft') : up ? 'ArrowDown' : 'ArrowUp'
+      const goal = up ? target - tol : target + tol
+      await holdUntil(page, key, `(p) => p.${axis} ${up ? '>=' : '<='} ${goal}`)
+      await settle(page)
+    }
   }
 }

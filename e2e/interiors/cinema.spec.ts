@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { WORLD, drawCalls, holdUntil, pose, ready, trackErrors, trackExternal } from '../helpers'
+import { WORLD, drawCalls, holdUntil, pose, ready, settle, trackErrors, trackExternal } from '../helpers'
 
 test.beforeEach(async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'desktop flows')
@@ -13,6 +13,7 @@ for (const fx of ['full', 'low'] as const) {
     const errors = trackErrors(page)
     await page.goto(`${fx === 'low' ? '/?fx=low' : '/'}#/b/cinema`)
     await ready(page, 'cinema')
+    await settle(page)
     const dc = await drawCalls(page)
     console.log(`draw calls cinema ${fx}: ${dc}`)
     expect(dc).toBeGreaterThan(1)

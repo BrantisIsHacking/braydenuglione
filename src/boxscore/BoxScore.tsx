@@ -1,17 +1,27 @@
 import { useEffect, useState } from 'react';
-import { banners, buildings, COLLECTION_LABEL, exhibitsIn, getCollection, getExhibit, profile, stationsByCategory } from '../content';
+import { banners, buildings, COLLECTION_LABEL, exhibitsIn, getCollection, getExhibit, profile, stations } from '../content';
 import type { Exhibit } from '../content';
 import { parseRoute } from '../routing/routes';
 import { CollectionList } from '../ui/CollectionList';
 import { ContactContent } from '../ui/ContactContent';
 import { ExhibitContent } from '../ui/ExhibitContent';
-import { Filters, type Filter } from './Filters';
-import { StationCard } from './StationCard';
+import { Entry } from './Entry';
+import { ICONS, MailIcon } from './icons';
+import { SECTIONS, sortByRecency } from './logic';
+import { useActiveSection } from './useActiveSection';
+import { useSpotlight } from './useSpotlight';
 import './boxscore.css';
 
 type InterestExhibit = Extract<Exhibit, { type: 'interest' }>;
 
-const CAREER = buildings.filter((b) => b.district === 'career');
+const ROLE_LINE = 'SWE · Data Science · ML';
+const SECTION_IDS = SECTIONS.map((s) => s.id);
+
+const EXPERIENCE = sortByRecency(stations.filter((s) => s.category === 'experience'));
+const PROJECTS = stations.filter((s) => s.category === 'project'); // authored order: strongest first
+const LEADERSHIP = sortByRecency(stations.filter((s) => s.category === 'leadership'));
+const EDUCATION = sortByRecency(stations.filter((s) => s.category === 'education'));
+const EARLIER = sortByRecency(stations.filter((s) => s.category === 'throwback'));
 
 // Interests grouped by their home building, in building order (mirrors are not repeated).
 const OFF_THE_CLOCK = buildings
@@ -21,43 +31,85 @@ const OFF_THE_CLOCK = buildings
   }))
   .filter((g) => g.items.length > 0);
 
-function HeaderLinks() {
+const reduceMotion = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** In-page navigation without touching the hash: the hash router would read `#about` as a route change. */
+function goTo(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth' });
+  const h = el.querySelector<HTMLElement>('h2');
+  if (h) {
+    h.tabIndex = -1;
+    h.focus({ preventScroll: true });
+  }
+}
+
+function IconLinks({ className }: { className?: string }) {
   return (
-    <ul className="bs__contact" aria-label="Contact links">
+    <ul className={className} aria-label="Contact and profile links">
+      {profile.links.map((l) => {
+        const Icon = ICONS[l.label];
+        return (
+          <li key={l.url}>
+            <a href={l.url} target="_blank" rel="noopener noreferrer" aria-label={`${l.label} (opens in a new tab)`} title={l.label}>
+              {Icon ? <Icon /> : l.label}
+            </a>
+          </li>
+        );
+      })}
       <li>
-        <a href={`mailto:${profile.email}`}>{profile.email}</a>
+        <a href={`mailto:${profile.email}`} aria-label={`Email ${profile.email}`} title="Email">
+          <MailIcon />
+        </a>
       </li>
-      {profile.links.map((l) => (
-        <li key={l.url}>
-          <a href={l.url} target="_blank" rel="noopener noreferrer">
-            {l.label}
-          </a>
-        </li>
-      ))}
     </ul>
   );
 }
 
-function InterestItem({ exhibit }: { exhibit: InterestExhibit }) {
+function InterestItem({ exhibit, targeted }: { exhibit: InterestExhibit; targeted: boolean }) {
   const { collection } = exhibit.interest;
+  // The long lists (75 books, films, games...) are only built once opened, which keeps first render light.
+  const [opened, setOpened] = useState(false);
   const bare: InterestExhibit = { ...exhibit, interest: { ...exhibit.interest, collection: undefined } };
   return (
-    <li id={exhibit.id} data-exhibit={exhibit.id} className="bs__item">
-      <ExhibitContent exhibit={bare} headingLevel={3} />
+    <li id={exhibit.id} data-exhibit={exhibit.id} className={`bs__item bs__interest${collection || exhibit.interest.playlist ? ' bs__interest--wide' : ''}${targeted ? ' is-target' : ''}`}>
+      <ExhibitContent exhibit={bare} headingLevel={4} />
       {collection && (
-        <details className="bs__more">
+        <details className="bs__more" onToggle={(e) => e.currentTarget.open && setOpened(true)}>
           <summary>{`${COLLECTION_LABEL[collection]} (${getCollection(collection).length})`}</summary>
-          <CollectionList id={collection} />
+          {opened && <CollectionList id={collection} headingLevel={5} />}
         </details>
       )}
     </li>
   );
 }
 
+function Section({ id, title, children, className = '' }: { id: string; title: string; children: React.ReactNode; className?: string }) {
+  return (
+    <section id={id} className={`bs__section ${className}`} aria-labelledby={`${id}-title`}>
+      <h2 className="bs__h2" id={`${id}-title`}>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
 export function BoxScore({ onExplore, notice }: { onExplore?: () => void; notice?: string } = {}) {
-  const [filter, setFilter] = useState<Filter>('all');
   const [target, setTarget] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const active = useActiveSection(SECTION_IDS, 'bs-end');
+  const rootRef = useSpotlight<HTMLDivElement>();
+
+  // On phones the nav is a horizontal strip: keep the active item in view.
+  useEffect(() => {
+    const a = document.querySelector<HTMLElement>('.bs__nav [aria-current="true"]');
+    const ul = a?.closest('ul');
+    if (a && ul && ul.scrollWidth > ul.clientWidth) {
+      ul.scrollTo?.({ left: a.offsetLeft - ul.clientWidth / 2 + a.offsetWidth / 2, behavior: reduceMotion() ? 'auto' : 'smooth' });
+    }
+  }, [active]);
 
   useEffect(() => {
     const apply = (initial = false) => {
@@ -77,10 +129,6 @@ export function BoxScore({ onExplore, notice }: { onExplore?: () => void; notice
           if (!(id && document.getElementById(id))) window.scrollTo(0, 0);
         }
         return;
-      }
-      if (ex.type === 'station') {
-        const cat = ex.station.category;
-        setFilter((f) => (f === 'all' || f === cat ? f : 'all'));
       }
       setTarget(exhibitId);
       setTick((t) => t + 1);
@@ -103,89 +151,129 @@ export function BoxScore({ onExplore, notice }: { onExplore?: () => void; notice
     }
   }, [target, tick]);
 
-  const visible = stationsByCategory(filter);
+  const list = (items: typeof stations) => (
+    <div className="bs__entries">
+      {items.map((s) => (
+        <Entry key={s.id} station={s} targeted={target === s.id} />
+      ))}
+    </div>
+  );
 
   return (
-    <div className="bs">
+    <div className="bs" ref={rootRef}>
+      <div className="bs__spot" aria-hidden="true" />
+      <a
+        className="bs__skip"
+        href="#content"
+        onClick={(e) => {
+          e.preventDefault();
+          const main = document.getElementById('content');
+          main?.focus();
+          main?.scrollIntoView({ block: 'start' });
+        }}
+      >
+        Skip to content
+      </a>
       {notice && (
         <p role="status" className="bs__notice">
           {notice}
         </p>
       )}
-      <header className="bs__head">
-        <p className="bs__jersey" aria-hidden="true">
-          {profile.jersey}
-        </p>
-        <div>
-          <h1 className="bs__name">{profile.name}</h1>
-          <p className="bs__tagline">{profile.tagline}</p>
-          <p className="bs__school">{profile.school}</p>
-          <p className="bs__targets">{profile.targets}</p>
-          <HeaderLinks />
-          {onExplore && (
-            <button type="button" className="bs__enter" onClick={onExplore}>
-              Explore Brayden&apos;s World
-            </button>
-          )}
-        </div>
-      </header>
+      <div className="bs__layout">
+        <header className="bs__side">
+          <div className="bs__id">
+            <h1 className="bs__name">{profile.name}</h1>
+            <p className="bs__role">{ROLE_LINE}</p>
+            <p className="bs__pitch">{profile.pitch}</p>
+            {onExplore && (
+              <button type="button" className="bs__enter" onClick={onExplore}>
+                Explore Brayden&apos;s World <span aria-hidden="true">→</span>
+              </button>
+            )}
+          </div>
+          <nav className="bs__nav" aria-label="Sections">
+            <ul>
+              {SECTIONS.map((s) => (
+                <li key={s.id}>
+                  <a
+                    href="#/box-score"
+                    className="bs__nav-link"
+                    aria-current={active === s.id ? 'true' : undefined}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      goTo(s.id);
+                    }}
+                  >
+                    <span className="bs__nav-bar" aria-hidden="true" />
+                    {s.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <IconLinks className="bs__icons" />
+        </header>
 
-      <Filters value={filter} onChange={setFilter} />
+        <main id="content" className="bs__main" tabIndex={-1}>
+          <Section id="section-about" title="About" className="bs__about">
+            <p className="bs__lead">{profile.intro}</p>
+            <p>{profile.school}</p>
+            <p className="bs__targets">{profile.targets}</p>
+          </Section>
 
-      <main>
-        {CAREER.map(({ id: zone, name: title }) => {
-          const list = visible.filter((s) => s.building === zone);
-          if (list.length === 0) return null;
-          return (
-            <section key={zone} id={`section-${zone}`} className="zone" aria-labelledby={`section-${zone}-title`}>
-              <h2 className="zone__title" id={`section-${zone}-title`}>
-                {title}
-              </h2>
-              <div className="zone__grid">
-                {list.map((s) => (
-                  <StationCard key={s.id} station={s} />
-                ))}
+          <Section id="section-experience" title="Experience">
+            {list(EXPERIENCE)}
+          </Section>
+
+          <Section id="section-projects" title="Projects">
+            {list(PROJECTS)}
+          </Section>
+
+          <Section id="section-leadership" title="Leadership">
+            {list(LEADERSHIP)}
+          </Section>
+
+          <Section id="section-education" title="Education">
+            {list(EDUCATION)}
+            <p className="bs__group-title">Before college</p>
+            {list(EARLIER)}
+          </Section>
+
+          <Section id="section-awards" title="Awards">
+            <ul className="bs__banners">
+              {banners.map((b) => (
+                <li key={b.id} id={b.id} data-exhibit={b.id} className={`bs__item banner${target === b.id ? ' is-target' : ''}`}>
+                  <ExhibitContent exhibit={getExhibit(b.id)!} headingLevel={3} />
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section id="section-off-the-clock" title="Off the clock">
+            {OFF_THE_CLOCK.map(({ building, items }) => (
+              <div key={building.id} className="bs__group">
+                <h3 className="bs__group-title">{building.name}</h3>
+                <ul className="bs__interests">
+                  {items.map((e) => (
+                    <InterestItem key={e.id} exhibit={e} targeted={target === e.id} />
+                  ))}
+                </ul>
               </div>
-            </section>
-          );
-        })}
-
-        <section id="section-hall-of-fame" className="zone" aria-labelledby="section-hall-of-fame-title">
-          <h2 className="zone__title" id="section-hall-of-fame-title">
-            Hall of Fame
-          </h2>
-          <ul className="bs__banners">
-            {banners.map((b) => (
-              <li key={b.id} id={b.id} data-exhibit={b.id} className="bs__item banner">
-                <ExhibitContent exhibit={getExhibit(b.id)!} headingLevel={3} />
-              </li>
             ))}
-          </ul>
-        </section>
+          </Section>
 
-        <section id="section-off-the-clock" className="zone" aria-labelledby="section-off-the-clock-title">
-          <h2 className="zone__title" id="section-off-the-clock-title">
-            Off the clock
-          </h2>
-          {OFF_THE_CLOCK.map(({ building, items }) => (
-            <div key={building.id} className="bs__group">
-              <h3 className="bs__group-title">{building.name}</h3>
-              <ul className="bs__interests">
-                {items.map((e) => (
-                  <InterestItem key={e.id} exhibit={e} />
-                ))}
-              </ul>
-            </div>
-          ))}
-        </section>
-
-        <section id="contact" data-exhibit="contact" className="zone press" aria-labelledby="contact-title">
-          <h2 className="zone__title" id="contact-title">
-            Contact
-          </h2>
-          <ContactContent />
-        </section>
-      </main>
+          <section id="contact" data-exhibit="contact" className={`bs__section press${target === 'contact' ? ' is-target' : ''}`} aria-labelledby="contact-title">
+            <h2 className="bs__h2" id="contact-title">
+              Contact
+            </h2>
+            <ContactContent />
+          </section>
+        </main>
+      </div>
+      <footer className="bs__foot">
+        <p>Designed and built by {profile.name}.</p>
+        <div id="bs-end" className="bs__end" aria-hidden="true" />
+      </footer>
     </div>
   );
 }

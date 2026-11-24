@@ -306,6 +306,48 @@ describe('history: adapter', () => {
     expect(store.getState().worldPose).toEqual(SPAWN_POSE);
   });
 
+  it('Back from a spot fast-travel restores the pose the player left, not a stale one', async () => {
+    let live: Pose = { x: 11, z: 12, heading: 1 };
+    sync = createHistorySync({ win: window, store, parse, exitPose, spotPose, toBoxScore, livePose: () => live });
+    sync.start();
+    finish(store);
+    sync.travel('#contact');
+    expect(store.getState().pending).toEqual({ scene: world, pose: spotPose('mailbox'), panelId: 'contact' });
+    finish(store);
+    live = spotPose('mailbox');
+    const popped = nextPop();
+    window.history.back();
+    await popped;
+    expect(store.getState().pending).toEqual({ scene: world, pose: { x: 11, z: 12, heading: 1 }, panelId: null });
+    finish(store);
+    // Forward returns to the spot
+    const fwd = nextPop();
+    window.history.forward();
+    await fwd;
+    expect(store.getState().pending).toEqual({ scene: world, pose: spotPose('mailbox'), panelId: 'contact' });
+  });
+
+  it('a door departure after a spot travel does not reuse the stored pose on Back', async () => {
+    let live: Pose = { x: 11, z: 12, heading: 1 };
+    sync = createHistorySync({ win: window, store, parse, exitPose, spotPose, toBoxScore, livePose: () => live });
+    sync.start();
+    finish(store);
+    sync.travel('#contact');
+    finish(store);
+    live = spotPose('mailbox');
+    const b1 = nextPop();
+    window.history.back();
+    await b1;
+    finish(store);
+    live = { x: 20, z: 21, heading: 0 };
+    sync.travel('#/b/library');
+    finish(store);
+    const b2 = nextPop();
+    window.history.back();
+    await b2;
+    expect(store.getState().pending).toEqual({ scene: world, pose: exitPose('library'), panelId: null });
+  });
+
   it('RF3: popstate while fading-out replaces pending', async () => {
     make().start();
     finish(store);

@@ -48,3 +48,19 @@ export function followFocus(
   const k = smoothing(Math.min(dt, 0.05), reducedMotion);
   return { x: prev.x + (desired.x - prev.x) * k, z: prev.z + (desired.z - prev.z) * k };
 }
+
+/** Below this width/height ratio the view is a portrait phone: the room is pulled back so more of its width fits. */
+const PORTRAIT_ASPECT = 0.85;
+const PORTRAIT_MAX_PULLBACK = 1.45;
+
+/** 1 on landscape and square views; grows as the aspect narrows (Pixel 7 portrait is about 1.4), capped. */
+export function portraitPullback(aspect: number): number {
+  if (!(aspect > 0) || aspect >= PORTRAIT_ASPECT) return 1;
+  return Math.min(PORTRAIT_MAX_PULLBACK, Math.sqrt(PORTRAIT_ASPECT / aspect));
+}
+
+/** Portrait HUD wraps to two rows, so the interior view shift is taller there. */
+export function hudShiftPx(width: number, height: number, basePx: number): number {
+  const portrait = width / Math.max(1, height) < PORTRAIT_ASPECT;
+  return Math.min(portrait ? basePx + 40 : basePx, Math.round(height * (portrait ? 0.13 : 0.08)));
+}

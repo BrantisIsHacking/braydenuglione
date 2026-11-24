@@ -33,9 +33,12 @@ describe('WorldApp', () => {
   it('is the focused application wrapper', () => {
     const { container } = render(<WorldApp env={env} />);
     const wrap = wrapOf(container);
-    expect(wrap).toHaveAttribute('role', 'application');
+    expect(wrap).not.toHaveAttribute('role');
     expect(wrap).toHaveClass('world');
-    expect(wrap.getAttribute('aria-label')).toBe("Brayden's World. W A S D or arrows to move, E to open an exhibit, M for the map.");
+    const app = screen.getByRole('application');
+    expect(wrap.contains(app)).toBe(true);
+    expect(app.querySelector('[data-testid="joystick"], .world-hud, .world-panel')).toBeNull();
+    expect(app.getAttribute('aria-label')).toBe("Brayden's World. W A S D or arrows to move, E to open an exhibit, M for the map.");
     expect(document.activeElement).toBe(wrap);
   });
 

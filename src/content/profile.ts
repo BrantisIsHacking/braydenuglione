@@ -3,6 +3,7 @@ import type { Profile } from './types';
 export const profile: Profile = {
   name: 'Brayden Uglione',
   tagline: "I like fixing things that don't work.",
+  pitch: 'I build software and make broken systems work reliably.',
   intro:
     "I'm Brayden Uglione, studying CS and Data Science with Math and Stats minors at Rutgers Honors College. I enjoy building software and taking broken systems and making them work reliably.",
   email: 'uglionebrayden@gmail.com',

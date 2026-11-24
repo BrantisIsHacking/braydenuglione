@@ -66,7 +66,7 @@ describe('CollectionList', () => {
     const a = render(<CollectionList id="artists" items={['X', 'Y']} />);
     expect(a.container.querySelectorAll('ol > li')).toHaveLength(2);
     const t = render(<CollectionList id="teams" items={[{ name: 'T1', sport: 'hockey' }, { name: 'T2', sport: 'soccer' }]} />);
-    expect(t.container.querySelectorAll('h4')).toHaveLength(2);
+    expect(t.container.querySelectorAll('h3')).toHaveLength(2);
     expect(t.container.querySelector('img')).toBeNull();
   });
 });

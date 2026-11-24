@@ -30,4 +30,12 @@ describe('StartScreen', () => {
     expect(window.location.hash).toBe('#/box-score')
     expect(screen.getByText(/Drag the pad to move/)).toBeTruthy()
   })
+  it('says who this is and explains both paths within the first screen', () => {
+    render(<StartScreen onExplore={() => {}} />)
+    expect(screen.getByText('Brayden Uglione')).toBeTruthy()
+    expect(screen.getByText(/SWE · Data Science · ML/)).toBeTruthy()
+    expect(screen.getByText(/Summer 2027 internships/)).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Scouting Report' }).getAttribute('aria-describedby')).toBeTruthy()
+    expect(screen.getByText(/In a hurry?/)).toBeTruthy()
+  })
 })
