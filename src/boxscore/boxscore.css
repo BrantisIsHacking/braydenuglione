@@ -26,7 +26,7 @@
 .bs__name { font-size: clamp(2.5rem, 11vw, 3.75rem); line-height: 0.92; text-transform: uppercase; letter-spacing: 0.01em; overflow-wrap: anywhere; margin: 1rem 0 0; }
 .bs__role { font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--scarlet-text); margin: 0.75rem 0 0; }
 .bs__pitch { font-size: 1.0625rem; max-width: 30ch; margin: 0.75rem 0 0; color: #d6d6d6; }
-.bs__enter { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1.25rem; font-family: var(--font-display); font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; font-size: 1.25rem; white-space: nowrap; color: var(--paper); background: var(--scarlet); border: 0; padding: 0.5rem 1rem; min-height: 3rem; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.bs__enter { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1.25rem; font-family: var(--font-display); font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; font-size: clamp(1rem, 5.2vw, 1.25rem); white-space: nowrap; max-width: 100%; color: var(--paper); background: var(--scarlet); border: 0; padding: 0.5rem 1rem; min-height: 3rem; cursor: pointer; transition: background 0.15s, color 0.15s; }
 .bs__enter span { display: inline-block; transition: transform 0.15s; }
 .bs__enter:hover { background: var(--paper); color: #a3002a; }
 .bs__enter:hover span { transform: translateX(4px); }
