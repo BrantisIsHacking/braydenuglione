@@ -3,6 +3,12 @@ import type { Scene, SceneModule } from '../types';
 
 export const interiorLoaders: Partial<Record<BuildingId, () => Promise<SceneModule>>> = {
   gym: () => import('./gym/Interior'),
+  workshop: () => import('./workshop/Interior'),
+  'hq-tower': () => import('./hq-tower/Interior'),
+  'civic-center': () => import('./civic-center/Interior'),
+  'campus-quad': () => import('./campus-quad/Interior'),
+  'hall-of-fame': () => import('./hall-of-fame/Interior'),
+  cinema: () => import('./cinema/Interior'),
 };
 
 const cache = new Map<string, Promise<SceneModule>>();

@@ -4,13 +4,16 @@ import { loadScene } from '../interiors/registry';
 import type { Theme } from '../look/theme';
 import { exitPose } from '../logic/layout';
 import { useWorld, type WorldStore } from '../store';
-import type { Scene, SceneModule, SceneProps, Target } from '../types';
+import type { Scene, SceneGeometry, SceneModule, SceneProps, Target } from '../types';
 
 export const LOAD_FAILED = "Couldn't open this building";
 
 type Mounted = { Comp: ComponentType<SceneProps>; scene: Scene; seq: number };
 
 const idOf = (s: Scene) => (s.kind === 'interior' ? s.id : null);
+const floorOf = (s: Scene) => (s.kind === 'interior' ? s.floor : undefined);
+/** A multi-floor geometry resolves the floor; other scenes keep theirs unchanged. */
+const resolved = (s: Scene, g: SceneGeometry): Scene => (s.kind === 'interior' && g.floor !== undefined ? { ...s, floor: g.floor } : s);
 
 /**
  * Loads the pending scene chunk while the screen is black, commits it, and renders it.
@@ -48,9 +51,10 @@ export function SceneSwitcher({
     loadScene(target.scene).then(
       (m) => {
         if (my !== token.current) return;
-        const geometry = m.sceneGeometry(idOf(target.scene));
-        store.getState().commit(target.scene, geometry, spawnPoseFor(target, geometry), target.panelId);
-        show(m, target.scene);
+        const geometry = m.sceneGeometry(idOf(target.scene), floorOf(target.scene));
+        const scene = resolved(target.scene, geometry);
+        store.getState().commit(scene, geometry, spawnPoseFor(target, geometry), target.panelId);
+        show(m, scene);
       },
       () => {
         if (my !== token.current) return;
@@ -59,10 +63,11 @@ export function SceneSwitcher({
         loadScene(back).then(
           (m) => {
             if (my !== token.current) return;
-            const geometry = m.sceneGeometry(idOf(back));
+            const geometry = m.sceneGeometry(idOf(back), floorOf(back));
             const pose = back.kind === 'world' && target.scene.kind === 'interior' ? exitPose(target.scene.id) : geometry.entrance;
-            store.getState().commit(back, geometry, pose, null);
-            show(m, back);
+            const scene = resolved(back, geometry);
+            store.getState().commit(scene, geometry, pose, null);
+            show(m, scene);
             failed.current();
           },
           (err) => {
@@ -79,7 +84,7 @@ export function SceneSwitcher({
   const { Comp, scene, seq } = mounted;
   return (
     <Suspense fallback={null}>
-      <Comp key={seq} buildingId={idOf(scene)} theme={theme} reducedMotion={reducedMotion} spawnAt={null} />
+      <Comp key={seq} buildingId={idOf(scene)} floor={floorOf(scene)} theme={theme} reducedMotion={reducedMotion} spawnAt={null} />
     </Suspense>
   );
 }

@@ -13,6 +13,12 @@ async function fresh() {
 describe('scene registry', () => {
   beforeEach(() => vi.resetModules());
 
+  it('every bespoke building (gym included) has a loader and every loader is bespoke', async () => {
+    const r = await fresh();
+    const { buildings } = await import('../../src/content');
+    expect(Object.keys(r.interiorLoaders).sort()).toEqual(buildings.filter((b) => b.bespoke).map((b) => b.id).sort());
+  });
+
   it('loads the generic interior and the world, memoised per key', async () => {
     const r = await fresh();
     const a = r.loadScene({ kind: 'interior', id: 'library' });

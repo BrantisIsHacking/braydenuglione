@@ -1,13 +1,17 @@
-import { getBuilding, getExhibit, homeBuilding } from '../content';
+import { getBuilding, getExhibit, homeBuilding, isFloor } from '../content';
 import type { BuildingId } from '../content/types';
 import type { Route } from '../routing/routeWords';
 import type { WorldStore } from './store';
-import { inFront, type Pose, type Scene, type SceneGeometry, type Target } from './types';
+import { inFront, NORTH, type Pose, type Scene, type SceneGeometry, type Target } from './types';
 
 export const WORLD_HASH = '#/world';
 
+/** Where a stairwell drops you: the landing by the south exit, facing north. */
+export const STAIR_LANDING: Pose = { x: 0, z: -2, heading: NORTH };
+
 export function hashForScene(s: Scene): string {
-  return s.kind === 'world' ? WORLD_HASH : `#/b/${s.id}`;
+  if (s.kind === 'world') return WORLD_HASH;
+  return s.floor !== undefined && s.floor >= 2 ? `#/b/${s.id}/${s.floor}` : `#/b/${s.id}`;
 }
 
 export function hashFor(s: Scene, panelId: string | null): string {
@@ -16,7 +20,7 @@ export function hashFor(s: Scene, panelId: string | null): string {
 
 export function sameScene(a: Scene, b: Scene): boolean {
   if (a.kind === 'world' || b.kind === 'world') return a.kind === b.kind;
-  return a.id === b.id;
+  return a.id === b.id && (a.floor ?? 1) === (b.floor ?? 1);
 }
 
 function samePose(a: Pose | null, b: Pose | null): boolean {
@@ -32,12 +36,12 @@ function sameTarget(a: Target, b: Target): boolean {
 export type RouteCtx = { scene: Scene; activeId: string | null; worldPose: Pose; spotPose(id: BuildingId): Pose };
 
 /** Where a building (or an exhibit's home building) puts the player. Mirrors never change the home. */
-function targetForBuilding(id: BuildingId, panelId: string | null, ctx: RouteCtx): Target | 'boxscore' {
+function targetForBuilding(id: BuildingId, panelId: string | null, ctx: RouteCtx, floor?: number): Target | 'boxscore' {
   const b = getBuilding(id);
   if (!b) return { scene: { kind: 'world' }, pose: ctx.worldPose, panelId: null };
   if (b.kind === 'overlay') return 'boxscore';
   if (b.kind === 'spot') return { scene: { kind: 'world' }, pose: ctx.spotPose(b.id), panelId };
-  return { scene: { kind: 'interior', id: b.id }, pose: null, panelId };
+  return { scene: floor !== undefined ? { kind: 'interior', id: b.id, floor } : { kind: 'interior', id: b.id }, pose: null, panelId };
 }
 
 export function targetForRoute(r: Route, ctx: RouteCtx): Target | 'boxscore' {
@@ -45,11 +49,11 @@ export function targetForRoute(r: Route, ctx: RouteCtx): Target | 'boxscore' {
     case 'boxscore':
       return 'boxscore';
     case 'building':
-      return targetForBuilding(r.id, null, ctx);
+      return targetForBuilding(r.id, null, ctx, r.floor);
     case 'exhibit': {
       const home = getExhibit(r.id) ? homeBuilding(r.id) : undefined;
       if (!home) return { scene: { kind: 'world' }, pose: ctx.worldPose, panelId: null };
-      return targetForBuilding(home, r.id, ctx);
+      return targetForBuilding(home, r.id, ctx, getExhibit(r.id)?.type === 'station' ? (getExhibit(r.id) as { floor?: number }).floor : undefined);
     }
     default: // 'auto' | 'world'
       return { scene: { kind: 'world' }, pose: ctx.worldPose, panelId: null };
@@ -77,6 +81,17 @@ export function spawnPoseFor(t: Target, g: SceneGeometry): Pose {
   return g.entrance;
 }
 
+export type HistorySync = {
+  start(): void;
+  travel(hash: string): void;
+  /** Elevator or stairs: replaceState to another floor of the current building. */
+  ride(floor: number, opts?: { stairs?: boolean }): void;
+  /** The south exit: stairs down on floors above 1, out of the building otherwise. */
+  exit(): void;
+  restore(): void;
+  dispose(): void;
+};
+
 export type HistoryDeps = {
   win: Window;
   store: WorldStore;
@@ -92,7 +107,7 @@ export type HistoryDeps = {
  * The only code that writes `history`. Pushes on scene changes (doors, exits, fast travel),
  * replaces on panel open/close, applies Back/Forward and typed hashes without writing.
  */
-export function createHistorySync(d: HistoryDeps): { start(): void; travel(hash: string): void; restore(): void; dispose(): void } {
+export function createHistorySync(d: HistoryDeps): HistorySync {
   const { win, store } = d;
   let applying = false;
   /**
@@ -166,7 +181,7 @@ export function createHistorySync(d: HistoryDeps): { start(): void; travel(hash:
     // 'boxscore' is ignored here: App owns that screen switch.
   };
 
-  return {
+  const api: HistorySync = {
     start() {
       win.addEventListener('popstate', onNav);
       win.addEventListener('hashchange', onNav);
@@ -200,6 +215,23 @@ export function createHistorySync(d: HistoryDeps): { start(): void; travel(hash:
         applyPanel(p.panelId);
       }
     },
+    ride(floor, opts) {
+      const s = store.getState();
+      if (s.scene.kind !== 'interior' || s.activeId !== null || s.pending !== null || s.phase !== 'idle') return;
+      const { id } = s.scene;
+      if (!isFloor(id, floor) || floor === (s.scene.floor ?? 1)) return;
+      s.closeElevator();
+      const next: Scene = { kind: 'interior', id, floor };
+      write('replace', hashForScene(next));
+      const pad = s.geometry?.pads?.find((p) => p.id === 'elevator');
+      applyGo({ scene: next, pose: opts?.stairs ? STAIR_LANDING : (pad?.arrival ?? null), panelId: null }, false);
+    },
+    exit() {
+      const s = store.getState();
+      const floor = s.scene.kind === 'interior' ? (s.scene.floor ?? 1) : 1;
+      if (floor > 1) api.ride(floor - 1, { stairs: true });
+      else api.travel('#/world');
+    },
     restore() {
       const s = store.getState();
       write('replace', hashFor(s.scene, s.activeId));
@@ -211,4 +243,5 @@ export function createHistorySync(d: HistoryDeps): { start(): void; travel(hash:
       unsubscribe = null;
     },
   };
+  return api;
 }

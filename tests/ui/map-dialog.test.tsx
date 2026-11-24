@@ -79,3 +79,13 @@ describe('MapDialog', () => {
     expect(store.getState().mapOpen).toBe(true);
   });
 });
+
+describe('MapDialog floors', () => {
+  it('marks the floor of an HQ exhibit; the Workshop list has no oculogica button', () => {
+    setup();
+    const d = screen.getByRole('dialog');
+    expect(within(d).getByRole('button', { name: /Machine Learning Research Intern.*Floor 3/ })).toBeInTheDocument();
+    const workshop = within(d).getByRole('button', { name: 'The Workshop' }).closest('li')!;
+    expect(within(workshop).queryByRole('button', { name: /Machine Learning Research Intern/ })).toBeNull();
+  });
+});

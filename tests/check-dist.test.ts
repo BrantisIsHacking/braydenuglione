@@ -137,10 +137,19 @@ describe('check-dist chunk groups', () => {
     expect(r.groups.some((x: { name: string }) => x.name === 'interior-gym')).toBe(true)
   })
   it('warns when a scene entry key is missing from the manifest', () => {
-    expect(missingSceneEntries(manifest)).toEqual(['src/world/world/WorldScene.tsx'])
+    const stage2 = ['workshop', 'hq-tower', 'civic-center', 'campus-quad', 'hall-of-fame', 'cinema'].map((id) => `src/world/interiors/${id}/Interior.tsx`)
+    expect(missingSceneEntries(manifest)).toEqual(['src/world/world/WorldScene.tsx', ...stage2])
     const r = checkDist(withManifest(manifest), TERMS)
     expect(r.errors).toEqual([])
     expect(r.warnings).toContain('scene entry src/world/world/WorldScene.tsx missing from manifest; its chunk target is not checked')
+    // a manifest with every entry but one reports exactly that one
+    const full: Record<string, unknown> = { ...manifest, 'src/world/world/WorldScene.tsx': { file: 'assets/ws.js', isDynamicEntry: true } }
+    for (const k of stage2) full[k] = { file: `assets/${k.split('/')[3]}.js`, isDynamicEntry: true }
+    expect(missingSceneEntries(full)).toEqual([])
+    delete full['src/world/interiors/hall-of-fame/Interior.tsx']
+    expect(missingSceneEntries(full)).toEqual(['src/world/interiors/hall-of-fame/Interior.tsx'])
+    const r2 = checkDist(withManifest(full), TERMS)
+    expect(r2.warnings).toContain('scene entry src/world/interiors/hall-of-fame/Interior.tsx missing from manifest; its chunk target is not checked')
   })
   it('finds an engine entry keyed by chunk name (also imported statically by the scenes)', () => {
     const m = { ...manifest } as Record<string, unknown>

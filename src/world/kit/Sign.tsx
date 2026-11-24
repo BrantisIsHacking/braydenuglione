@@ -3,6 +3,7 @@ import labelFont from '@fontsource/barlow-condensed/files/barlow-condensed-latin
 import type { ThemeColorKey } from '../../content/types';
 import { toFontSafe } from '../logic/fontSafe';
 import { theme } from '../look/theme';
+import { gradientMap } from '../scene/materials';
 
 export function Sign({ text, position, rotationY = 0, board, color = theme.accents.offWhite, size = 0.5 }: {
   text: string; position: [number, number, number]; rotationY?: number; board: ThemeColorKey; color?: string; size?: number;
@@ -13,7 +14,7 @@ export function Sign({ text, position, rotationY = 0, board, color = theme.accen
     <group position={position} rotation={[0, rotationY, 0]}>
       <mesh>
         <boxGeometry args={[w, size + 0.4, 0.1]} />
-        <meshToonMaterial color={theme.accents[board]} />
+        <meshToonMaterial color={theme.accents[board]} gradientMap={gradientMap} />
       </mesh>
       <Text font={labelFont} fontSize={size} color={color} anchorX="center" anchorY="middle" position={[0, 0, 0.06]}>
         {safe}

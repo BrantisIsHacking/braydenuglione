@@ -1,4 +1,5 @@
 import { getBuilding, getExhibit } from '../content/exhibits';
+import { isFloor } from '../content/floors';
 import { canRunArena, type Env } from './capability';
 import type { Route } from './routeWords';
 
@@ -18,10 +19,12 @@ export function parseRoute(hash: string): Route {
   if (h === '/box-score') return { view: 'boxscore' };
   if (h === '/arena') return { view: 'building', id: 'gym', legacy: true };
   if (h.startsWith('/b/')) {
-    const b = getBuilding(h.slice(3));
+    const [word, extra, ...rest] = h.slice(3).split('/');
+    const b = getBuilding(word);
     if (!b) return AUTO;
     if (b.kind === 'overlay') return { view: 'boxscore' };
-    return { view: 'building', id: b.id, legacy: false };
+    const n = extra !== undefined && rest.length === 0 && /^\d+$/.test(extra) ? Number(extra) : NaN;
+    return isFloor(b.id, n) ? { view: 'building', id: b.id, legacy: false, floor: n } : { view: 'building', id: b.id, legacy: false };
   }
   if (h.startsWith('/')) return AUTO;
   return getExhibit(h) ? { view: 'exhibit', id: h } : AUTO;
@@ -48,7 +51,7 @@ export function hashForRoute(r: Route): string {
     case 'auto': return '#/';
     case 'boxscore': return '#/box-score';
     case 'world': return '#/world';
-    case 'building': return `#/b/${r.id}`;
+    case 'building': return r.floor !== undefined && r.floor >= 2 ? `#/b/${r.id}/${r.floor}` : `#/b/${r.id}`;
     case 'exhibit': return `#${r.id}`;
   }
 }

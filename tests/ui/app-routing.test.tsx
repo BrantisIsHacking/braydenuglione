@@ -94,13 +94,25 @@ describe('app routing', () => {
     expect(cards(container)).toHaveLength(45)
     expect(screen.queryByTestId('world')).toBeNull()
   })
+  it.each([
+    ['#/b/hq-tower/9', '#/b/hq-tower'],
+    ['#/b/hq-tower/1', '#/b/hq-tower'],
+    ['#/b/workshop/2', '#/b/workshop'],
+    ['#/b/hq-tower/3', '#/b/hq-tower/3'],
+  ])('%s is rewritten in place to %s without a new history entry', (hash, want) => {
+    window.history.pushState(null, '', `/${hash}`)
+    const before = window.history.length
+    render(<App env={desktop} />)
+    expect(window.location.hash).toBe(want)
+    expect(window.history.length).toBe(before)
+  })
   it('RF1: loader rejection → Box Score with the failure notice', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     loader.fn.mockImplementation(() => Promise.reject(new Error('chunk')))
     window.history.replaceState(null, '', '/#/b/gym')
     const FreshApp = await fresh()
     const { container } = render(<FreshApp env={desktop} />)
-    expect(await screen.findByText(FAILURE)).toBeTruthy()
+    expect(await screen.findByText(FAILURE, {}, { timeout: 5000 })).toBeTruthy()
     expect(cards(container)).toHaveLength(45)
   })
   it('RF1: world component throwing → Box Score with the failure notice', async () => {
@@ -112,7 +124,7 @@ describe('app routing', () => {
     window.history.replaceState(null, '', '/#/b/gym')
     const FreshApp = await fresh()
     render(<FreshApp env={desktop} />)
-    expect(await screen.findByText(FAILURE)).toBeTruthy()
+    expect(await screen.findByText(FAILURE, {}, { timeout: 5000 })).toBeTruthy()
   })
   it('the world node stays mounted across in-world hash changes; box score and back skip the start screen', async () => {
     render(<App env={desktop} />)

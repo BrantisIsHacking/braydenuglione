@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { findPrivateTerm, loadPrivateTerms } from '../src/privacy/privateTerms.mjs';
 import {
   ALL_TEXT, PHONE_PATTERN, SIGN_ALLOW_LIST, EXHIBIT_COUNT, banners, buildings, exhibits, exhibitsIn, getBuilding,
-  getCollection, COLLECTION_LABEL, getExhibit, homeBuilding, interests, stations,
+  getCollection, COLLECTION_LABEL, getExhibit, homeBuilding, interests, stations, floorsOf, isFloor,
 } from '../src/content';
 import { mirrors } from '../src/content/mirrors';
 import { ROUTE_WORDS } from '../src/routing/routeWords';
@@ -98,8 +98,57 @@ describe('content model', () => {
     expect(gym.find((p) => p.exhibit.id === 'basketball')?.pos).toEqual([3, 5]);
     expect(gym.find((p) => p.exhibit.id === 'rising-star')).toMatchObject({ mirror: true, pos: [-3, -7] });
   });
+  it('stage-2 buildings are bespoke', () => {
+    expect(buildings.filter((b) => b.bespoke).map((b) => b.id).sort()).toEqual(['campus-quad', 'cinema', 'civic-center', 'gym', 'hall-of-fame', 'hq-tower', 'workshop']);
+  });
+  it('authored positions match the contract table', () => {
+    const POS: Record<string, [number, number]> = {
+      'workshop/tranquility-base': [-6, -12], 'workshop/dreams-come-true': [0, -12], 'workshop/debate-mate': [6, -12],
+      'workshop/zayi-ai-studio': [-6, -6], 'workshop/airbnb-classifier': [6, -6], 'workshop/oculogica': [0, -6],
+      'hq-tower/shah-sokoloff': [3, -7], 'hq-tower/code-ninjas': [3, -7], 'hq-tower/oculogica': [1, -7], 'hq-tower/ai-camp': [5.5, -7], 'hq-tower/zayi-fellow': [3, -7],
+      'civic-center/usacs': [-7, -12], 'civic-center/hackru': [0, -12], 'civic-center/calc-ii-la': [7, -12],
+      'civic-center/honors-ambassador': [-6, -6], 'civic-center/orientation-leader': [-2, -6], 'civic-center/teaching-mentoring': [6, -6],
+      'campus-quad/rutgers-honors': [-8, -16], 'campus-quad/critics-choice': [0, -16], 'campus-quad/ccm': [8, -16],
+      'campus-quad/robotics': [-10, -9], 'campus-quad/advisory-council': [-5, -9], 'campus-quad/hackmcst': [0, -9], 'campus-quad/nslc': [5, -9], 'campus-quad/java-juniors': [10, -9],
+      'hall-of-fame/critics-choice-prize': [-7.5, -12], 'hall-of-fame/best-code-tech': [-2.5, -12], 'hall-of-fame/best-gemini': [2.5, -12], 'hall-of-fame/bloodiest-game': [7.5, -12],
+      'hall-of-fame/academy-scholar': [-7.5, -6], 'hall-of-fame/rising-star': [-2.5, -6], 'hall-of-fame/honor-societies': [2.5, -6], 'hall-of-fame/critics-choice': [7.5, -6],
+    };
+    const got: Record<string, [number, number]> = {};
+    for (const b of ['workshop', 'hq-tower', 'civic-center', 'campus-quad', 'hall-of-fame'] as const)
+      for (const p of exhibitsIn(b)) if (p.pos) got[`${b}/${p.exhibit.id}`] = p.pos;
+    expect(got).toEqual(POS);
+  });
+  it('cinema placements are authored (amendment A2)', () => {
+    const c = exhibitsIn('cinema');
+    expect(c.map((p) => p.exhibit.id)).toEqual(['movies', 'critics-choice']);
+    for (const p of c) expect(p.pos).toBeDefined();
+  });
+  it('rings on the same floor are at least 3 m apart', () => {
+    for (const b of buildings.filter((x) => x.bespoke)) {
+      const ps = exhibitsIn(b.id).filter((p) => p.pos);
+      for (let i = 0; i < ps.length; i++)
+        for (let j = i + 1; j < ps.length; j++) {
+          if ((ps[i].floor ?? 1) !== (ps[j].floor ?? 1)) continue;
+          const [a, c] = [ps[i].pos!, ps[j].pos!];
+          expect(Math.hypot(a[0] - c[0], a[1] - c[1]), `${b.id}/${ps[i].exhibit.id}-${ps[j].exhibit.id}`).toBeGreaterThanOrEqual(3);
+        }
+    }
+  });
+  it('floors', () => {
+    expect(floorsOf('hq-tower').map((f) => f.n)).toEqual([1, 2, 3, 4]);
+    expect(floorsOf('hq-tower').map((f) => f.name)).toEqual(['IT server room', 'Coding dojo', 'Med-ML lab', 'AI lab']);
+    expect(floorsOf('gym')).toEqual([]);
+    expect(isFloor('hq-tower', 3)).toBe(true);
+    for (const n of [0, 5, 2.5]) expect(isFloor('hq-tower', n)).toBe(false);
+    expect(isFloor('gym', 1)).toBe(false);
+    for (const f of floorsOf('hq-tower'))
+      expect(exhibitsIn('hq-tower').some((p) => !p.mirror && p.floor === f.n), `floor ${f.n}`).toBe(true);
+  });
   it('signs use the allow-list or the Brayden prefix', () => {
-    expect(SIGN_ALLOW_LIST).toHaveLength(18);
+    expect(SIGN_ALLOW_LIST).toHaveLength(36);
+    for (const s of ['ELEVATOR', 'FLOOR 1: IT ROOM', 'FLOOR 2: CODING DOJO', 'FLOOR 3: MED-ML LAB', 'FLOOR 4: AI LAB', 'LECTURE HALL', 'JUDGING HALL', 'CLASSROOM', 'TOUR DESK', 'MENTORSHIP BOARD', 'HONORS HALL', 'SCREENING ROOM', 'HIGH SCHOOL WING', 'ROBOTICS LAB', 'NOW SHOWING', 'TICKETS', 'CONCESSIONS', 'THEATER 1'])
+      expect(SIGN_ALLOW_LIST).toContain(s);
+    for (const f of floorsOf('hq-tower')) expect(SIGN_ALLOW_LIST).toContain(f.sign);
     for (const b of buildings) expect(SIGN_ALLOW_LIST.includes(b.sign) || /^Brayden's /.test(b.sign), b.id).toBe(true);
   });
   it('accents are theme colors', () => {

@@ -225,3 +225,24 @@ describe('world store', () => {
     expect(s.getState().toast).toBeNull();
   });
 });
+
+describe('elevator state', () => {
+  it('open / close / setPad are idempotent and go() closes the elevator', () => {
+    const s = createWorldStore(fake());
+    const calls = vi.fn();
+    s.subscribe(calls);
+    s.getState().openElevator();
+    s.getState().openElevator();
+    expect(calls).toHaveBeenCalledTimes(1);
+    s.getState().setPad('elevator');
+    s.getState().setPad('elevator');
+    expect(calls).toHaveBeenCalledTimes(2);
+    expect(s.getState().padId).toBe('elevator');
+    s.getState().openMap();
+    expect(s.getState().mapOpen).toBe(false);
+    s.getState().go({ scene: { kind: 'world' }, pose: null, panelId: null });
+    expect(s.getState().elevatorOpen).toBe(false);
+    s.getState().closeElevator();
+    expect(calls).toHaveBeenCalledTimes(3);
+  });
+});

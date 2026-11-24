@@ -80,3 +80,20 @@ describe('Joystick', () => {
     expect(liveInput.joy).toEqual({ x: 0, y: 0 });
   });
 });
+
+describe('Hud floors and elevator prompt', () => {
+  it('names the floor in a multi-floor building and announces politely', () => {
+    const store = createWorldStore(null);
+    store.setState({ scene: { kind: 'interior', id: 'hq-tower', floor: 3 } });
+    render(<Hud store={store} />);
+    expect(screen.getByText('HQ Tower · Floor 3')).toHaveAttribute('aria-live', 'polite');
+  });
+  it('the elevator pad prompt opens the dialog', () => {
+    const store = createWorldStore(null);
+    act(() => store.getState().setPad('elevator'));
+    render(<Prompt touch={false} store={store} />);
+    expect(screen.getByTestId('prompt')).toHaveTextContent('Press E — Elevator');
+    fireEvent.click(screen.getByTestId('prompt'));
+    expect(store.getState().elevatorOpen).toBe(true);
+  });
+});

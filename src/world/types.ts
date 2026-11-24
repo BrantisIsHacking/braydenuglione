@@ -12,11 +12,12 @@ export type ZoomIndex = 0 | 1 | 2;
 export function inFront(pos: [number, number]): Pose {
   return { x: pos[0], z: pos[1] + 1.5, heading: NORTH };
 }
-export type Scene = { kind: 'world' } | { kind: 'interior'; id: BuildingId };
+export type Scene = { kind: 'world' } | { kind: 'interior'; id: BuildingId; floor?: number };
 export type Target = { scene: Scene; pose: Pose | null; panelId: string | null };
 export type Trigger = { id: string; rect: Rect };
 export type PlacedExhibit = { id: string; pos: [number, number] };
-export type SceneGeometry = { bounds: Bounds; colliders: Rect[]; doors: Trigger[]; exits: Trigger[]; exhibits: PlacedExhibit[]; entrance: Pose; cameraDistance: number; /** Interiors: metres the view may run past the south wall (default 2). Smaller pushes the room down the screen. */ cameraSouthPad?: number };
+export type Pad = Trigger & { arrival: Pose };
+export type SceneGeometry = { bounds: Bounds; colliders: Rect[]; doors: Trigger[]; exits: Trigger[]; exhibits: PlacedExhibit[]; entrance: Pose; cameraDistance: number; /** Interiors: metres the view may run past the south wall (default 2). Smaller pushes the room down the screen. */ cameraSouthPad?: number; pads?: Pad[]; /** Resolved floor of a multi-floor interior. */ floor?: number };
 export type SceneProps = { buildingId: BuildingId | null; theme: Theme; reducedMotion: boolean; spawnAt: Pose | null; floor?: number };
-export type SceneModule = { default: ComponentType<SceneProps>; sceneGeometry(id: BuildingId | null): SceneGeometry };
+export type SceneModule = { default: ComponentType<SceneProps>; sceneGeometry(id: BuildingId | null, floor?: number): SceneGeometry };
 export type InteriorProps = SceneProps;

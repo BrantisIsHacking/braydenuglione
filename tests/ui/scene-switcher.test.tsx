@@ -120,3 +120,46 @@ describe('SceneSwitcher', () => {
     expect(unhandled).not.toHaveBeenCalled();
   });
 });
+
+describe('SceneSwitcher floors', () => {
+  const floorMod = (): { m: SceneModule; spy: ReturnType<typeof vi.fn>; seen: (number | undefined)[] } => {
+    const seen: (number | undefined)[] = [];
+    const spy = vi.fn((id: string | null, floor?: number) => ({ ...geoFor(id), ...(id === 'hq-tower' ? { floor: floor ?? 1 } : {}) }));
+    const m: SceneModule = {
+      default: (p: SceneProps) => {
+        seen.push(p.floor);
+        return <div data-testid="scene" data-floor={p.floor ?? ''} />;
+      },
+      sceneGeometry: spy as unknown as SceneModule['sceneGeometry'],
+    };
+    return { m, spy, seen };
+  };
+
+  it('an unspecified floor resolves through the geometry and is committed', async () => {
+    const { m, spy } = floorMod();
+    reg.load.mockResolvedValue(m);
+    mount();
+    act(() => store.getState().go({ scene: { kind: 'interior', id: 'hq-tower' }, pose: null, panelId: null }, { instant: true }));
+    await flush();
+    expect(spy).toHaveBeenCalledWith('hq-tower', undefined);
+    expect(store.getState().scene).toEqual({ kind: 'interior', id: 'hq-tower', floor: 1 });
+  });
+  it('floor 3 reaches sceneGeometry and the component', async () => {
+    const { m, spy } = floorMod();
+    reg.load.mockResolvedValue(m);
+    mount();
+    act(() => store.getState().go({ scene: { kind: 'interior', id: 'hq-tower', floor: 3 }, pose: null, panelId: null }, { instant: true }));
+    await flush();
+    expect(spy).toHaveBeenCalledWith('hq-tower', 3);
+    expect(screen.getByTestId('scene')).toHaveAttribute('data-floor', '3');
+    expect(store.getState().scene).toEqual({ kind: 'interior', id: 'hq-tower', floor: 3 });
+  });
+  it('a building without floors commits a scene with no floor key', async () => {
+    const { m } = floorMod();
+    reg.load.mockResolvedValue(m);
+    mount();
+    act(() => store.getState().go({ scene: { kind: 'interior', id: 'workshop' }, pose: null, panelId: null }, { instant: true }));
+    await flush();
+    expect('floor' in store.getState().scene).toBe(false);
+  });
+});

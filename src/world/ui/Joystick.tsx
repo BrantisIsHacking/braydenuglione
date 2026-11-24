@@ -12,7 +12,7 @@ export function Joystick({ store = useWorld }: { store?: WorldStore } = {}) {
 
   const apply = (e: PointerEvent<HTMLDivElement>) => {
     const s = store.getState();
-    if (s.activeId || s.mapOpen || s.phase !== 'idle') return end();
+    if (s.activeId || s.mapOpen || s.elevatorOpen || s.phase !== 'idle') return end();
     const r = e.currentTarget.getBoundingClientRect();
     const dx = e.clientX - (r.left + r.width / 2);
     const dy = e.clientY - (r.top + r.height / 2);

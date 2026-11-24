@@ -53,3 +53,27 @@ describe('playerFrame', () => {
     expect(far.prefetch).not.toContain('gym');
   });
 });
+
+describe('pads', () => {
+  const PAD = { id: 'elevator', rect: { x: -5.5, z: -9.6, w: 2, d: 2 }, arrival: { x: -5.5, z: -7.6, heading: SOUTH } };
+  const geo: SceneGeometry = { ...sceneGeometry('library'), bounds: { minX: -8, maxX: 8, minZ: -12, maxZ: 0 }, pads: [PAD], colliders: [], exits: [] };
+  const bare: SceneGeometry = { ...geo, pads: undefined };
+  it('reports the pad under the player', () => {
+    expect(playerFrame({ x: -5.5, z: -9.6, heading: NORTH }, NO_INPUT, DT, geo).pad).toBe('elevator');
+    expect(playerFrame({ x: -5.5, z: -7.6, heading: SOUTH }, NO_INPUT, DT, geo).pad).toBeNull();
+    expect(playerFrame({ x: -5.5, z: -9.6, heading: NORTH }, NO_INPUT, DT, bare).pad).toBeNull();
+  });
+  it('the latch fires once on stepping onto the pad and not when spawning inside it', () => {
+    const latch = createDoorLatch();
+    let fired = 0;
+    for (const f of run(PAD.arrival, N, geo, 1.5)) if (latch.update(f.pad)) fired++;
+    expect(fired).toBe(1);
+    const inside = createDoorLatch();
+    fired = 0;
+    for (const f of run({ x: -5.5, z: -9.6, heading: NORTH }, NO_INPUT, geo, 0.5)) if (inside.update(f.pad)) fired++;
+    expect(fired).toBe(0);
+    for (const f of run({ x: -5.5, z: -9.6, heading: NORTH }, S, geo, 1)) inside.update(f.pad);
+    for (const f of run({ x: -5.5, z: -7.6, heading: NORTH }, N, geo, 1)) if (inside.update(f.pad)) fired++;
+    expect(fired).toBe(1);
+  });
+});

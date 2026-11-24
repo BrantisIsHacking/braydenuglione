@@ -21,6 +21,7 @@ import { Fade } from './ui/Fade';
 import { Hud } from './ui/Hud';
 import { InteractButton } from './ui/InteractButton';
 import { Joystick } from './ui/Joystick';
+import { ElevatorDialog } from './ui/ElevatorDialog';
 import { MapDialog } from './ui/MapDialog';
 import { Panel } from './ui/Panel';
 import { Prompt } from './ui/Prompt';
@@ -79,8 +80,11 @@ export default function WorldApp({ env }: WorldAppProps) {
         sync.travel(`#/b/${id}`);
       }
     };
-    const onExit = () => sync.travel('#/world');
-    return { sync, toBoxScore, onDoor, onExit, travel: (h: string) => sync.travel(h), restore: () => sync.restore() };
+    const onExit = () => sync.exit();
+    const onPad = (id: string) => {
+      if (id === 'elevator') useWorld.getState().openElevator();
+    };
+    return { sync, toBoxScore, onDoor, onExit, onPad, ride: (floor: number) => sync.ride(floor), travel: (h: string) => sync.travel(h), restore: () => sync.restore() };
   });
 
   useEffect(() => {
@@ -103,6 +107,8 @@ export default function WorldApp({ env }: WorldAppProps) {
       const s = useWorld.getState();
       s.closePanel();
       s.closeMap();
+      s.closeElevator();
+      s.setPad(null);
       s.setProximity(null, null);
     };
   }, [nav]);
@@ -127,6 +133,7 @@ export default function WorldApp({ env }: WorldAppProps) {
       data-ready="false"
       data-scene=""
       data-draw-calls=""
+      data-floor={scene.kind === 'interior' && scene.floor !== undefined ? String(scene.floor) : ''}
       data-transition={phase}
       data-fx={fx}
       data-motion={env.reducedMotion ? 'reduced' : 'full'}
@@ -143,7 +150,7 @@ export default function WorldApp({ env }: WorldAppProps) {
           <FxGovernor enabled={forced === null && fx === 'full'} />
           <GlowPulse theme={t} />
           <SceneSwitcher theme={t} reducedMotion={env.reducedMotion} onLoadFailed={nav.restore} />
-          <Player reducedMotion={env.reducedMotion} onDoor={nav.onDoor} onExit={nav.onExit} />
+          <Player reducedMotion={env.reducedMotion} onDoor={nav.onDoor} onExit={nav.onExit} onPad={nav.onPad} />
           <CameraRig env={env} />
           {settled && <ReadySignal key={commitSeq} target={wrapRef} sceneKey={scene.kind === 'world' ? 'world' : scene.id} />}
           {fx === 'full' && !inGym && <Effects theme={t} threshold={t.daylight.bloomThreshold} />}
@@ -159,6 +166,7 @@ export default function WorldApp({ env }: WorldAppProps) {
       )}
       <Panel />
       <MapDialog onTravel={nav.travel} />
+      <ElevatorDialog onRide={nav.ride} />
       <Toast />
       <Fade reducedMotion={env.reducedMotion} />
     </div>

@@ -126,15 +126,34 @@ describe('useKeyboard', () => {
       expect(store.getState().mapOpen).toBe(false);
       expect(liveInput.pressed.size).toBe(0);
     });
-    it('does nothing while a scene change is in flight', () => {
+    it('a movement key pressed during a scene change stays live once the scene is idle; actions are ignored meanwhile', () => {
       const store = createWorldStore(null);
       renderHook(() => useKeyboard(store));
       act(() => store.getState().go({ scene: { kind: 'world' }, pose: null, panelId: null }, { instant: true }));
       expect(store.getState().phase).toBe('loading');
-      key('keydown', 'KeyW');
+      key('keydown', 'ArrowUp');
       key('keydown', 'KeyM');
-      expect(liveInput.pressed.size).toBe(0);
+      expect(liveInput.pressed.has('ArrowUp')).toBe(true);
       expect(store.getState().mapOpen).toBe(false);
+      act(() => store.setState({ phase: 'idle' }));
+      expect(liveInput.pressed.has('ArrowUp')).toBe(true);
+      key('keyup', 'ArrowUp');
+      expect(liveInput.pressed.size).toBe(0);
+    });
+    it('a key held when a scene change starts is cleared and its auto-repeats stay ignored until it is released', () => {
+      const store = createWorldStore(null);
+      renderHook(() => useKeyboard(store));
+      key('keydown', 'ArrowDown');
+      expect(liveInput.pressed.has('ArrowDown')).toBe(true);
+      act(() => store.getState().go({ scene: { kind: 'world' }, pose: null, panelId: null }, { instant: true }));
+      expect(liveInput.pressed.size).toBe(0);
+      key('keydown', 'ArrowDown', { repeat: true });
+      act(() => store.setState({ phase: 'idle' }));
+      key('keydown', 'ArrowDown', { repeat: true });
+      expect(liveInput.pressed.size).toBe(0);
+      key('keyup', 'ArrowDown');
+      key('keydown', 'ArrowDown');
+      expect(liveInput.pressed.has('ArrowDown')).toBe(true);
     });
     it('Ctrl+W does nothing', () => {
       renderHook(() => useKeyboard(createWorldStore(null)));
@@ -149,6 +168,39 @@ describe('useKeyboard', () => {
     key('keydown', 'KeyE', { repeat: true });
     expect(store.getState().activeId).toBeNull();
     key('keydown', 'KeyE');
+    expect(store.getState().activeId).toBe('robotics');
+  });
+});
+
+describe('elevator keys', () => {
+  beforeEach(() => resetLiveInput());
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+  it('freezes movement and Map while the elevator is open', () => {
+    const store = createWorldStore(null);
+    renderHook(() => useKeyboard(store));
+    act(() => store.getState().openElevator());
+    key('keydown', 'KeyW');
+    expect(liveInput.pressed.size).toBe(0);
+    key('keydown', 'KeyM');
+    expect(store.getState().mapOpen).toBe(false);
+  });
+  it('E on the pad opens the elevator; a nearby exhibit wins', () => {
+    const store = createWorldStore(null);
+    const wrap = document.createElement('div');
+    wrap.tabIndex = -1;
+    wrap.setAttribute('data-world-focus', '');
+    document.body.appendChild(wrap);
+    wrap.focus();
+    renderHook(() => useKeyboard(store));
+    act(() => store.getState().setPad('elevator'));
+    key('keydown', 'KeyE');
+    expect(store.getState().elevatorOpen).toBe(true);
+    act(() => store.getState().closeElevator());
+    act(() => store.getState().setProximity('robotics', 'robotics'));
+    key('keydown', 'KeyE');
+    expect(store.getState().elevatorOpen).toBe(false);
     expect(store.getState().activeId).toBe('robotics');
   });
 });

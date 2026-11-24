@@ -239,3 +239,27 @@
 @media (prefers-reduced-motion: reduce) {
   .world-prompt, .world-panel, .world-map { animation: none; }
 }
+
+.world-elevator { width: min(520px, calc(100vw - 32px)); }
+.world-elevator__body { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+.world-elevator__steps { display: flex; gap: 8px; }
+.world-elevator__steps button,
+.world-elevator__floor {
+  min-height: 44px;
+  font: inherit;
+  color: var(--paper);
+  background: color-mix(in srgb, var(--paper) 6%, transparent);
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.world-elevator__steps button { flex: 1; text-align: center; font-weight: 700; }
+.world-elevator__steps button:disabled { opacity: 0.45; cursor: default; }
+.world-elevator__floor { display: flex; flex-direction: column; gap: 2px; }
+.world-elevator__floor strong { font-size: 1rem; }
+.world-elevator__floor span { font-size: 0.85rem; opacity: 0.8; }
+.world-elevator__floor[aria-current="true"] { border-color: var(--scarlet); border-width: 2px; }
+.world-elevator__floor:hover,
+.world-elevator__steps button:not(:disabled):hover { border-color: var(--paper); }
+.world-elevator button:focus-visible { outline: 3px solid var(--paper); outline-offset: 2px; }

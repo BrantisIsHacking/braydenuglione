@@ -6,8 +6,18 @@ export function InteractButton({ store = useWorld }: { store?: WorldStore }) {
   const nearId = store((s) => s.nearId);
   const open = store((s) => s.activeId !== null);
   const activate = store((s) => s.activate);
+  const onElevator = store((s) => s.padId === 'elevator');
+  const openElevator = store((s) => s.openElevator);
   const ex = nearId ? getExhibit(nearId) : undefined;
-  if (!ex || open) return null;
+  if (open) return null;
+  if (!ex) {
+    if (!onElevator) return null;
+    return (
+      <button type="button" className="world-interact" data-testid="interact-button" aria-label="Open the elevator" onClick={openElevator}>
+        <span aria-hidden="true">E</span>
+      </button>
+    );
+  }
   return (
     <button type="button" className="world-interact" data-testid="interact-button" aria-label={`Open ${ex.title}`} onClick={() => activate(ex.id)}>
       <span aria-hidden="true">E</span>

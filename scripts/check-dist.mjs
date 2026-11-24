@@ -15,7 +15,7 @@ export const CHUNK_TARGETS = { engine: 400 * 1024, 'world-scene': 150 * 1024, 'i
 export const SCENE_ENTRIES = { engine: 'src/world/WorldApp.tsx', 'world-scene': 'src/world/world/WorldScene.tsx', interiorGlob: /^src\/world\/interiors\/([^/]+)\/Interior\.tsx$/ }
 
 /** Manifest keys every build must contain; a missing one means a chunk target silently stopped being checked. */
-export const REQUIRED_SCENE_KEYS = [SCENE_ENTRIES.engine, SCENE_ENTRIES['world-scene'], 'src/world/interiors/generic/Interior.tsx', 'src/world/interiors/gym/Interior.tsx']
+export const REQUIRED_SCENE_KEYS = [SCENE_ENTRIES.engine, SCENE_ENTRIES['world-scene'], 'src/world/interiors/generic/Interior.tsx', 'src/world/interiors/gym/Interior.tsx', ...['workshop', 'hq-tower', 'civic-center', 'campus-quad', 'hall-of-fame', 'cinema'].map((id) => `src/world/interiors/${id}/Interior.tsx`)]
 
 /**
  * Manifest key for a source entry. A dynamic entry that other chunks also import statically (WorldApp: the scene

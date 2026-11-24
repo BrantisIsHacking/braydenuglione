@@ -28,6 +28,7 @@ export type PlayerFrame = {
   pose: Pose;
   door: string | null;
   exit: boolean;
+  pad: string | null;
   nearestId: string | null;
   nearId: string | null;
   labels: string[];
@@ -42,6 +43,7 @@ export function playerFrame(prev: Pose, input: MoveInput, dt: number, geo: Scene
     pose,
     door: triggerAt(pose, geo.doors),
     exit: triggerAt(pose, geo.exits) !== null,
+    pad: triggerAt(pose, geo.pads ?? []),
     nearestId: near ? near.id : null,
     nearId: near && inReach(near.dist, geo.exits.length > 0 ? REACH_INTERIOR_M : REACH_M) ? near.id : null,
     labels: nearestIds(pose, geo.exhibits, LABEL_COUNT),
@@ -59,15 +61,26 @@ export function PlayerBody({ reducedMotion }: { reducedMotion: boolean }) {
   );
 }
 
-export function Player({ reducedMotion = false, onDoor, onExit }: { reducedMotion?: boolean; onDoor?(id: BuildingId): void; onExit?(): void }) {
+export function Player({
+  reducedMotion = false,
+  onDoor,
+  onExit,
+  onPad,
+}: {
+  reducedMotion?: boolean;
+  onDoor?(id: BuildingId): void;
+  onExit?(): void;
+  onPad?(id: string): void;
+}) {
   const ref = useRef<Group>(null);
   const pose = useRef<Pose>({ ...useWorld.getState().spawn.pose });
   const seq = useRef(-1);
   const frame = useRef(0);
   const doorLatch = useRef(createDoorLatch());
   const exitLatch = useRef(createDoorLatch());
-  const cb = useRef({ onDoor, onExit });
-  cb.current = { onDoor, onExit };
+  const padLatch = useRef(createDoorLatch());
+  const cb = useRef({ onDoor, onExit, onPad });
+  cb.current = { onDoor, onExit, onPad };
 
   useFrame((_, dt) => {
     const st = useWorld.getState();
@@ -76,20 +89,24 @@ export function Player({ reducedMotion = false, onDoor, onExit }: { reducedMotio
       pose.current = { ...st.spawn.pose };
       doorLatch.current.reset();
       exitLatch.current.reset();
+      padLatch.current.reset();
       playerMotion.speed = 0;
     }
     const geo = st.geometry;
     const prev = pose.current;
     let p = prev;
     if (geo) {
-      const frozen = st.activeId !== null || st.mapOpen || st.phase !== 'idle';
+      const frozen = st.activeId !== null || st.mapOpen || st.elevatorOpen || st.phase !== 'idle';
       const input = frozen ? NO_INPUT : combineInput(keysToInput(liveInput.pressed), joystickToInput(liveInput.joy));
       const f = playerFrame(prev, input, dt, geo);
       p = pose.current = f.pose;
       st.setProximity(f.nearestId, f.nearId);
       st.setLabels(f.labels);
+      st.setPad(f.pad);
       const door = doorLatch.current.update(f.door);
       const exit = exitLatch.current.update(f.exit ? 'exit' : null);
+      const pad = padLatch.current.update(f.pad);
+      if (pad) cb.current.onPad?.(pad);
       if (door) cb.current.onDoor?.(door as BuildingId);
       else if (exit) cb.current.onExit?.();
       frame.current += 1;

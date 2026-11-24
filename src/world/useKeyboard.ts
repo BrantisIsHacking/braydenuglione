@@ -23,22 +23,37 @@ function hasWorldFocus(): boolean {
 
 export function useKeyboard(store: WorldStore = useWorld): void {
   useEffect(() => {
+    // Keys that were already held when a scene change began: their auto-repeats must not re-arm them,
+    // or holding a direction through a stairs ride or a door would cascade into the next exit.
+    const stale = new Set<string>();
     const down = (e: KeyboardEvent) => {
       if (isTyping(e.target) || isTyping(document.activeElement)) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const s = store.getState();
-      if (s.activeId || s.mapOpen || s.phase !== 'idle') return;
+      if (s.activeId || s.mapOpen || s.elevatorOpen) return;
       const focus = hasWorldFocus();
       const c = e.code;
+      // Movement keys are tracked through scene transitions too (Player ignores them while
+      // the phase is not idle), so a key pressed during a fade is live the moment the scene is idle.
       if (ARROWS.has(c) || (LETTERS.has(c) && focus)) {
+        if (stale.has(c)) {
+          if (e.repeat) {
+            e.preventDefault();
+            return;
+          }
+          stale.delete(c);
+        }
         liveInput.pressed.add(c);
         e.preventDefault();
-      } else if (!focus) {
+      } else if (!focus || s.phase !== 'idle') {
         return;
       } else if (c === 'KeyE' || c === 'Enter' || c === 'Space') {
         if (e.repeat) return;
         if (s.nearId) {
           s.activate(s.nearId);
+          e.preventDefault();
+        } else if (s.padId === 'elevator') {
+          s.openElevator();
           e.preventDefault();
         }
       } else if (c === 'KeyM') {
@@ -51,8 +66,12 @@ export function useKeyboard(store: WorldStore = useWorld): void {
     };
     const up = (e: KeyboardEvent) => {
       liveInput.pressed.delete(e.code);
+      stale.delete(e.code);
     };
-    const clear = () => resetLiveInput();
+    const clear = () => {
+      stale.clear();
+      resetLiveInput();
+    };
     const vis = () => {
       if (document.visibilityState === 'hidden') resetLiveInput();
     };
@@ -61,7 +80,11 @@ export function useKeyboard(store: WorldStore = useWorld): void {
     window.addEventListener('blur', clear);
     document.addEventListener('visibilitychange', vis);
     const unsub = store.subscribe((s, prev) => {
-      if ((s.activeId && !prev.activeId) || (s.mapOpen && !prev.mapOpen) || (s.phase !== 'idle' && prev.phase === 'idle')) resetLiveInput();
+      if ((s.activeId && !prev.activeId) || (s.mapOpen && !prev.mapOpen) || (s.elevatorOpen && !prev.elevatorOpen)) resetLiveInput();
+      if (s.phase !== 'idle' && prev.phase === 'idle') {
+        liveInput.pressed.forEach((k) => stale.add(k));
+        resetLiveInput();
+      }
     });
     return () => {
       window.removeEventListener('keydown', down);

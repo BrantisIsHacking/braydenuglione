@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { buildings, exhibitsIn } from '../../content';
+import { buildings, exhibitsIn, floorsOf } from '../../content';
 import type { District } from '../../content/types';
 import { useWorld, type WorldStore } from '../store';
 import { useFocusTrap } from './focusTrap';
@@ -66,6 +66,7 @@ export function MapDialog({ onTravel, store = useWorld }: { onTravel(hash: strin
                               <li key={p.exhibit.id}>
                                 <button type="button" className="world-map__exhibit" onClick={() => travel(`#${p.exhibit.id}`)}>
                                   {p.exhibit.title}
+                                  {floorsOf(b.id).length > 0 && p.floor !== undefined ? ` (Floor ${p.floor})` : ''}
                                 </button>
                               </li>
                             ))}

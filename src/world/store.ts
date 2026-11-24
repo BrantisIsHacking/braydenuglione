@@ -22,6 +22,9 @@ export type WorldState = {
   geometry: SceneGeometry | null;
   labelIds: string[];
   mapOpen: boolean;
+  elevatorOpen: boolean;
+  /** Id of the pad the player stands on (interiors with pads). */
+  padId: string | null;
   toast: string | null;
   zoomIndex: ZoomIndex;
   activate(id: string): void;
@@ -39,6 +42,9 @@ export type WorldState = {
   setLabels(ids: string[]): void;
   openMap(): void;
   closeMap(): void;
+  openElevator(): void;
+  closeElevator(): void;
+  setPad(id: string | null): void;
   setZoom(i: ZoomIndex): void;
   showToast(m: string): void;
   dismissToast(): void;
@@ -67,6 +73,8 @@ export function createWorldStore(storage: Storage | null): WorldStore {
     geometry: null,
     labelIds: [],
     mapOpen: false,
+    elevatorOpen: false,
+    padId: null,
     toast: null,
     zoomIndex: 1,
     // SEAM: Phase 4 routes this through the shot sequence before openPanel.
@@ -99,7 +107,7 @@ export function createWorldStore(storage: Storage | null): WorldStore {
     go: (target, opts) => {
       const cur = get().phase;
       const phase: Phase = opts?.instant ? 'loading' : cur === 'idle' || cur === 'fading-in' ? 'fading-out' : cur;
-      set({ pending: target, phase, activeId: null, mapOpen: false });
+      set({ pending: target, phase, activeId: null, mapOpen: false, elevatorOpen: false });
     },
     beginLoad: () => {
       if (get().phase === 'fading-out') set({ phase: 'loading' });
@@ -119,10 +127,19 @@ export function createWorldStore(storage: Storage | null): WorldStore {
       if (!sameIds(get().labelIds, ids)) set({ labelIds: ids });
     },
     openMap: () => {
-      if (!get().mapOpen) set({ mapOpen: true });
+      if (!get().mapOpen && !get().elevatorOpen) set({ mapOpen: true });
     },
     closeMap: () => {
       if (get().mapOpen) set({ mapOpen: false });
+    },
+    openElevator: () => {
+      if (!get().elevatorOpen) set({ elevatorOpen: true });
+    },
+    closeElevator: () => {
+      if (get().elevatorOpen) set({ elevatorOpen: false });
+    },
+    setPad: (id) => {
+      if (get().padId !== id) set({ padId: id });
     },
     setZoom: (i) => {
       if (get().zoomIndex !== i) set({ zoomIndex: i });

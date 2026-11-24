@@ -14,3 +14,18 @@ describe('Prompt', () => {
     expect(p).toHaveAttribute('data-exhibit', 'books');
   });
 });
+
+describe('Prompt / InteractButton on the elevator pad', () => {
+  it('shows the elevator prompt and touch button, and opens the dialog', () => {
+    const store = createWorldStore(null);
+    act(() => store.getState().setPad('elevator'));
+    const { unmount } = render(<Prompt touch store={store} />);
+    expect(screen.getByTestId('prompt')).toHaveTextContent('Tap to open — Elevator');
+    unmount();
+    render(<InteractButton store={store} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open the elevator' }));
+    expect(store.getState().elevatorOpen).toBe(true);
+  });
+});
+import { fireEvent } from '@testing-library/react';
+import { InteractButton } from '../../src/world/ui/InteractButton';

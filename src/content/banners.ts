@@ -3,6 +3,7 @@ import type { Banner } from './types';
 export const banners: Banner[] = [
   {
     id: 'critics-choice-prize',
+    pos: [-7.5, -12],
     title: "Critic's Choice Prize",
     issuer: 'Rutgers Honors College',
     year: '2025',
@@ -11,6 +12,7 @@ export const banners: Banner[] = [
   },
   {
     id: 'best-code-tech',
+    pos: [-2.5, -12],
     title: 'Best Use of Code & Technology',
     issuer: 'NASA Space Apps NYC',
     year: '2026',
@@ -19,6 +21,7 @@ export const banners: Banner[] = [
   },
   {
     id: 'best-gemini',
+    pos: [2.5, -12],
     title: 'Best Use of Gemini',
     issuer: 'NASA Space Apps NYC',
     year: '2026',
@@ -27,6 +30,7 @@ export const banners: Banner[] = [
   },
   {
     id: 'bloodiest-game',
+    pos: [7.5, -12],
     title: 'Bloodiest Game',
     issuer: 'NSLC at UCLA',
     year: '2024',
@@ -35,6 +39,7 @@ export const banners: Banner[] = [
   },
   {
     id: 'academy-scholar',
+    pos: [-7.5, -6],
     title: 'Academy Scholar',
     issuer: 'Morris County School of Technology',
     year: '2024',
@@ -43,6 +48,7 @@ export const banners: Banner[] = [
   },
   {
     id: 'rising-star',
+    pos: [-2.5, -6],
     title: 'Rising Star Award',
     issuer: 'Morris Tech Basketball',
     year: '2023',
@@ -51,6 +57,7 @@ export const banners: Banner[] = [
   },
   {
     id: 'honor-societies',
+    pos: [2.5, -6],
     title: 'NHS · NTHS · NSHSS',
     issuer: 'National honor societies',
     year: '2024',

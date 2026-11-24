@@ -4,6 +4,7 @@ export const stations: Station[] = [
   {
     id: 'tranquility-base',
     building: 'workshop',
+    pos: [-6, -12],
     category: 'project',
     kind: 'standard',
     title: 'Tranquility Base',
@@ -36,6 +37,7 @@ export const stations: Station[] = [
   {
     id: 'dreams-come-true',
     building: 'workshop',
+    pos: [0, -12],
     category: 'project',
     kind: 'standard',
     title: 'DreamsComeTrue',
@@ -68,6 +70,7 @@ export const stations: Station[] = [
   {
     id: 'debate-mate',
     building: 'workshop',
+    pos: [6, -12],
     category: 'project',
     kind: 'standard',
     title: 'DebateMate',
@@ -100,6 +103,7 @@ export const stations: Station[] = [
   {
     id: 'zayi-ai-studio',
     building: 'workshop',
+    pos: [-6, -6],
     category: 'project',
     kind: 'terminal',
     title: 'Zayi AI Studio',
@@ -133,6 +137,7 @@ export const stations: Station[] = [
   {
     id: 'airbnb-classifier',
     building: 'workshop',
+    pos: [6, -6],
     category: 'project',
     kind: 'terminal',
     title: 'Airbnb Listing Price Classifier',
@@ -165,6 +170,7 @@ export const stations: Station[] = [
   {
     id: 'zayi-fellow',
     building: 'hq-tower',
+    pos: [3, -7],
     floor: 4,
     category: 'experience',
     kind: 'standard',
@@ -189,6 +195,7 @@ export const stations: Station[] = [
   {
     id: 'usacs',
     building: 'civic-center',
+    pos: [-7, -12],
     category: 'leadership',
     kind: 'standard',
     title: 'USACS Education & Mentorship',
@@ -212,6 +219,7 @@ export const stations: Station[] = [
   {
     id: 'hackru',
     building: 'civic-center',
+    pos: [0, -12],
     category: 'leadership',
     kind: 'standard',
     title: 'Head of Judging Operations',
@@ -235,6 +243,7 @@ export const stations: Station[] = [
   {
     id: 'calc-ii-la',
     building: 'civic-center',
+    pos: [7, -12],
     category: 'experience',
     kind: 'standard',
     title: 'Calculus II Learning Assistant',
@@ -258,6 +267,7 @@ export const stations: Station[] = [
   {
     id: 'honors-ambassador',
     building: 'civic-center',
+    pos: [-6, -6],
     category: 'leadership',
     kind: 'standard',
     title: 'Honors College Ambassador',
@@ -281,6 +291,7 @@ export const stations: Station[] = [
   {
     id: 'orientation-leader',
     building: 'civic-center',
+    pos: [-2, -6],
     category: 'leadership',
     kind: 'standard',
     title: 'Orientation Leader',
@@ -303,6 +314,7 @@ export const stations: Station[] = [
   {
     id: 'rutgers-honors',
     building: 'campus-quad',
+    pos: [-8, -16],
     category: 'education',
     kind: 'standard',
     title: 'Rutgers University – Honors College',
@@ -326,6 +338,7 @@ export const stations: Station[] = [
   {
     id: 'critics-choice',
     building: 'campus-quad',
+    pos: [0, -16],
     category: 'education',
     kind: 'video',
     title: "Critic's Choice Documentary",
@@ -356,6 +369,7 @@ export const stations: Station[] = [
   {
     id: 'code-ninjas',
     building: 'hq-tower',
+    pos: [3, -7],
     floor: 2,
     category: 'experience',
     kind: 'standard',
@@ -380,6 +394,7 @@ export const stations: Station[] = [
   {
     id: 'shah-sokoloff',
     building: 'hq-tower',
+    pos: [3, -7],
     floor: 1,
     category: 'experience',
     kind: 'standard',
@@ -404,6 +419,7 @@ export const stations: Station[] = [
   {
     id: 'ccm',
     building: 'campus-quad',
+    pos: [8, -16],
     category: 'education',
     kind: 'standard',
     title: 'Data Analytics Certificate',
@@ -426,6 +442,7 @@ export const stations: Station[] = [
   {
     id: 'teaching-mentoring',
     building: 'civic-center',
+    pos: [6, -6],
     category: 'leadership',
     kind: 'standard',
     title: 'Teaching & Mentoring',
@@ -449,6 +466,7 @@ export const stations: Station[] = [
   {
     id: 'oculogica',
     building: 'hq-tower',
+    pos: [1, -7],
     floor: 3,
     category: 'experience',
     kind: 'terminal',
@@ -485,6 +503,7 @@ export const stations: Station[] = [
   {
     id: 'ai-camp',
     building: 'hq-tower',
+    pos: [5.5, -7],
     floor: 3,
     category: 'experience',
     kind: 'standard',
@@ -509,6 +528,7 @@ export const stations: Station[] = [
   {
     id: 'robotics',
     building: 'campus-quad',
+    pos: [-10, -9],
     category: 'throwback',
     kind: 'standard',
     title: 'Tech Devils Robotics',
@@ -535,6 +555,7 @@ export const stations: Station[] = [
   {
     id: 'advisory-council',
     building: 'campus-quad',
+    pos: [-5, -9],
     category: 'throwback',
     kind: 'standard',
     title: 'Advisory Council Representative',
@@ -558,6 +579,7 @@ export const stations: Station[] = [
   {
     id: 'hackmcst',
     building: 'campus-quad',
+    pos: [0, -9],
     category: 'throwback',
     kind: 'standard',
     title: 'HackMCST Competition Structure',
@@ -581,6 +603,7 @@ export const stations: Station[] = [
   {
     id: 'nslc',
     building: 'campus-quad',
+    pos: [5, -9],
     category: 'throwback',
     kind: 'standard',
     title: 'Game & Interactive Media Design',
@@ -604,6 +627,7 @@ export const stations: Station[] = [
   {
     id: 'java-juniors',
     building: 'campus-quad',
+    pos: [10, -9],
     category: 'throwback',
     kind: 'standard',
     title: 'Java Juniors',

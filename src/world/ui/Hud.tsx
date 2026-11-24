@@ -1,4 +1,4 @@
-import { EXHIBIT_COUNT, getBuilding } from '../../content';
+import { EXHIBIT_COUNT, floorsOf, getBuilding } from '../../content';
 import { useWorld, type WorldStore } from '../store';
 import './world-ui.css';
 
@@ -10,7 +10,8 @@ export function Hud({
   const scene = store((s) => s.scene);
   const count = store((s) => s.visited.length);
   const openMap = store((s) => s.openMap);
-  const where = scene.kind === 'world' ? "Brayden's World" : (getBuilding(scene.id)?.name ?? "Brayden's World");
+  const name = scene.kind === 'world' ? "Brayden's World" : (getBuilding(scene.id)?.name ?? "Brayden's World");
+  const where = scene.kind === 'interior' && floorsOf(scene.id).length > 0 ? `${name} · Floor ${scene.floor ?? 1}` : name;
   return (
     <nav className="world-hud" aria-label="World">
       <a className="world-hud__btn" href="#/box-score">
@@ -37,7 +38,7 @@ export function Hud({
         Map
       </button>
       <p className="world-hud__status">
-        <span className="world-hud__where">{where}</span>
+        <span className="world-hud__where" aria-live="polite">{where}</span>
         <span className="world-hud__count">{`Exhibits visited ${count}/${EXHIBIT_COUNT}`}</span>
       </p>
     </nav>

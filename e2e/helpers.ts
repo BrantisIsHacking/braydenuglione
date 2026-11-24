@@ -21,9 +21,10 @@ export function trackExternal(page: Page, baseURL: string) {
 
 export const WORLD = '[data-world-focus]'
 
-/** Waits until `scene` ('world' or a building id) has committed and rendered a frame. */
-export async function ready(page: Page, scene: string) {
-  await expect(page.locator(`${WORLD}[data-ready="true"][data-scene="${scene}"]`)).toBeVisible({ timeout: 30_000 })
+/** Waits until `scene` ('world' or a building id) has committed and rendered a frame; `floor` also matches data-floor. */
+export async function ready(page: Page, scene: string, floor?: number) {
+  const f = floor === undefined ? '' : `[data-floor="${floor}"]`
+  await expect(page.locator(`${WORLD}[data-ready="true"][data-scene="${scene}"]${f}`)).toBeVisible({ timeout: 30_000 })
 }
 
 /** Player ground position from the wrapper's `data-pose` ("x,z", updated every 6 frames). */

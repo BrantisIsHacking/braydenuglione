@@ -16,6 +16,7 @@ export { profile, stations, banners, interests };
 export * from './buildings';
 export * from './exhibits';
 export * from './collections';
+export * from './floors';
 
 export const PHONE_PATTERN = /\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/;
 

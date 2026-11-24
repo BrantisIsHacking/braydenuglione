@@ -65,3 +65,25 @@ describe('hashForRoute', () => {
     expect(hashForRoute(parseRoute(h))).toBe(h)
   })
 })
+
+describe('floor routes', () => {
+  const hq = { view: 'building', id: 'hq-tower', legacy: false } as const
+  it('parses a valid floor', () => {
+    expect(parseRoute('#/b/hq-tower/3')).toEqual({ ...hq, floor: 3 })
+    expect(parseRoute('#/b/hq-tower/1')).toEqual({ ...hq, floor: 1 })
+  })
+  it.each(['#/b/hq-tower/0', '#/b/hq-tower/5', '#/b/hq-tower/2.5', '#/b/hq-tower/x', '#/b/hq-tower/', '#/b/hq-tower/2/x', '#/b/hq-tower/-1'])('hostile %s lands on the lobby', (h) => {
+    const r = parseRoute(h)
+    expect(r).toEqual(hq)
+    expect('floor' in r).toBe(false)
+  })
+  it('floors only exist on multi-floor buildings; unknown buildings go to auto', () => {
+    expect(parseRoute('#/b/gym/2')).toEqual({ view: 'building', id: 'gym', legacy: false })
+    expect(parseRoute('#/b/nope/2')).toEqual({ view: 'auto' })
+  })
+  it('hashForRoute writes floors >= 2 only', () => {
+    expect(hashForRoute({ ...hq, floor: 3 })).toBe('#/b/hq-tower/3')
+    expect(hashForRoute({ ...hq, floor: 1 })).toBe('#/b/hq-tower')
+    expect(hashForRoute(hq)).toBe('#/b/hq-tower')
+  })
+})

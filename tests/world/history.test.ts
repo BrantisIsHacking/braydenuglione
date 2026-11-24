@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
-  WORLD_HASH, createHistorySync, hashFor, hashForScene, planRoute, sameScene, spawnPoseFor, targetForRoute,
+  STAIR_LANDING, WORLD_HASH, createHistorySync, hashFor, hashForScene, planRoute, sameScene, spawnPoseFor, targetForRoute,
   type RouteCtx,
 } from '../../src/world/history';
 import { createWorldStore, type WorldStore } from '../../src/world/store';
 import { inFront, NORTH, SOUTH, SPAWN_POSE, type Pose, type SceneGeometry } from '../../src/world/types';
 import type { Route } from '../../src/routing/routeWords';
 import type { BuildingId } from '../../src/content/types';
+import { parseRoute } from '../../src/routing/routes';
 
 const ids: BuildingId[] = [
   'scouting-office', 'hall-of-fame', 'mailbox', 'workshop', 'hq-tower', 'civic-center', 'campus-quad', 'gym',
@@ -75,7 +76,7 @@ describe('history: targetForRoute', () => {
   it('RF5: mirrors never change the home building', () => {
     expect(t(parse('#rising-star'))).toEqual({ scene: interior('hall-of-fame'), pose: null, panelId: 'rising-star' });
     expect(t(parse('#critics-choice'))).toEqual({ scene: interior('campus-quad'), pose: null, panelId: 'critics-choice' });
-    expect(t(parse('#oculogica'))).toEqual({ scene: interior('hq-tower'), pose: null, panelId: 'oculogica' });
+    expect(t(parse('#oculogica'))).toEqual({ scene: { kind: 'interior', id: 'hq-tower', floor: 3 }, pose: null, panelId: 'oculogica' });
     // even when already standing in a building that mirrors it
     expect(t(parse('#rising-star'), ctx({ scene: interior('gym') }))).toEqual({ scene: interior('hall-of-fame'), pose: null, panelId: 'rising-star' });
   });
@@ -497,5 +498,155 @@ describe('history: adapter', () => {
     expect(store.getState().pending).toBeNull();
     store.getState().openPanel('books');
     expect(window.location.hash).toBe('#/b/gym');
+  });
+});
+
+// ---------------------------------------------------------------- stage 2: floors
+
+const hq = (floor?: number) => (floor === undefined ? interior('hq-tower') : ({ kind: 'interior', id: 'hq-tower', floor } as const));
+const PAD = { id: 'elevator', rect: { x: -5.5, z: -9.6, w: 2, d: 2 }, arrival: { x: -5.5, z: -7.6, heading: SOUTH } };
+const hqGeo: SceneGeometry = { ...geo, pads: [PAD], floor: 1 };
+
+describe('history: floors', () => {
+  it('hashForScene / sameScene with floors', () => {
+    expect(hashForScene(hq(3))).toBe('#/b/hq-tower/3');
+    expect(hashForScene(hq(1))).toBe('#/b/hq-tower');
+    expect(hashForScene(hq())).toBe('#/b/hq-tower');
+    expect(sameScene(hq(), hq(1))).toBe(true);
+    expect(sameScene(hq(1), hq(3))).toBe(false);
+  });
+  it('targetForRoute carries the floor', () => {
+    const t = (h: string, c = ctx()) => targetForRoute(parseRoute(h), c);
+    expect(t('#oculogica')).toEqual({ scene: hq(3), pose: null, panelId: 'oculogica' });
+    expect(t('#/b/hq-tower/4')).toEqual({ scene: hq(4), pose: null, panelId: null });
+    expect(t('#/b/hq-tower/9')).toEqual({ scene: hq(), pose: null, panelId: null });
+    const w = t('#tranquility-base');
+    expect(w !== 'boxscore' && 'floor' in w.scene).toBe(false);
+  });
+  it('planRoute sends exhibits to their home floor', () => {
+    const p = (h: string, c: Partial<RouteCtx>) => planRoute(parseRoute(h), ctx(c));
+    expect(p('#ai-camp', { scene: hq(1) })).toMatchObject({ kind: 'go', target: { scene: hq(3), panelId: 'ai-camp' } });
+    expect(p('#ai-camp', { scene: hq(3) })).toEqual({ kind: 'panel', panelId: 'ai-camp' });
+    expect(p('#oculogica', { scene: interior('workshop') })).toMatchObject({ kind: 'go', target: { scene: hq(3) } });
+    expect(p('#/b/hq-tower/3', { scene: hq(3) })).toEqual({ kind: 'none' });
+    expect(p('#critics-choice', { scene: interior('hall-of-fame') })).toMatchObject({ kind: 'go', target: { scene: interior('campus-quad') } });
+  });
+});
+
+describe('history: elevator ride', () => {
+  let store: WorldStore;
+  let sync: ReturnType<typeof createHistorySync>;
+  const build = () => {
+    store = createWorldStore(null);
+    sync = createHistorySync({ win: window, store, parse: parseRoute, exitPose, spotPose, toBoxScore: vi.fn() });
+  };
+  beforeEach(() => {
+    window.history.pushState(null, '', '#/world');
+    build();
+  });
+  afterEach(() => {
+    sync.dispose();
+    vi.restoreAllMocks();
+  });
+  const commitNow = (g: SceneGeometry = hqGeo) => {
+    const s = store.getState();
+    const t = s.pending!;
+    if (s.phase === 'fading-out') s.beginLoad();
+    const floor = t.scene.kind === 'interior' ? (t.scene.floor ?? 1) : undefined;
+    const scene = t.scene.kind === 'interior' ? { ...t.scene, floor: floor! } : t.scene;
+    store.getState().commit(scene, t.scene.kind === 'interior' ? { ...g, floor } : geo, spawnPoseFor(t, g), t.panelId);
+    store.getState().settle();
+  };
+  const enter = (hash = '#/b/hq-tower') => {
+    window.history.replaceState(null, '', hash);
+    sync.start();
+    commitNow();
+  };
+
+  it('ride(3) replaces the URL once, never pushes, arrives at the pad', () => {
+    enter();
+    const push = vi.spyOn(window.history, 'pushState');
+    const replace = vi.spyOn(window.history, 'replaceState');
+    const len = window.history.length;
+    store.getState().openElevator();
+    sync.ride(3);
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledWith(null, '', '#/b/hq-tower/3');
+    expect(push).not.toHaveBeenCalled();
+    expect(window.history.length).toBe(len);
+    const s = store.getState();
+    expect(s.pending).toEqual({ scene: hq(3), pose: { x: -5.5, z: -7.6, heading: SOUTH }, panelId: null });
+    expect(s.elevatorOpen).toBe(false);
+  });
+  it('ride to the current floor, a bad floor, or from the world is a no-op', () => {
+    sync.start(); // world
+    commitNow();
+    const replace = vi.spyOn(window.history, 'replaceState');
+    sync.ride(2);
+    expect(replace).not.toHaveBeenCalled();
+    expect(store.getState().pending).toBeNull();
+    sync.dispose();
+    build();
+    enter();
+    replace.mockClear();
+    sync.ride(1);
+    sync.ride(9);
+    sync.ride(2.5);
+    expect(replace).not.toHaveBeenCalled();
+    expect(store.getState().pending).toBeNull();
+  });
+  it('popstate to the world during a ride leaves the building', async () => {
+    window.history.pushState(null, '', '#/b/hq-tower');
+    sync.start();
+    commitNow();
+    sync.ride(3);
+    expect(store.getState().phase).toBe('fading-out');
+    const popped = new Promise<void>((res) => window.addEventListener('popstate', () => res(), { once: true }));
+    window.history.back();
+    await popped;
+    expect(window.location.hash).toBe('#/world');
+    expect(store.getState().pending).toEqual({ scene: world, pose: exitPose('hq-tower'), panelId: null });
+    commitNow();
+    expect(store.getState().scene).toEqual(world);
+    expect(store.getState().worldPose).toEqual(exitPose('hq-tower'));
+  });
+  it('an exhibit travel pushes once; Back to the building lands on floor 1 with no panel', async () => {
+    enter();
+    const len = window.history.length;
+    const push = vi.spyOn(window.history, 'pushState');
+    sync.travel('#zayi-fellow');
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(push).toHaveBeenCalledWith(null, '', '#zayi-fellow');
+    expect(window.history.length).toBe(len + 1);
+    commitNow();
+    expect(store.getState().scene).toEqual(hq(4));
+    expect(store.getState().activeId).toBe('zayi-fellow');
+    const popped = new Promise<void>((res) => window.addEventListener('popstate', () => res(), { once: true }));
+    window.history.back();
+    await popped;
+    expect(store.getState().pending).toEqual({ scene: hq(), pose: null, panelId: null });
+  });
+  it('closing a panel on floor 3 replaces with the floor hash', () => {
+    enter('#oculogica');
+    expect(store.getState().scene).toEqual(hq(3));
+    const replace = vi.spyOn(window.history, 'replaceState');
+    store.getState().closePanel();
+    expect(replace).toHaveBeenCalledWith(null, '', '#/b/hq-tower/3');
+  });
+  it('stairs: exit() on floor 3 goes to floor 2 at the landing; on floor 1 it leaves the building', () => {
+    enter('#/b/hq-tower/3');
+    const replace = vi.spyOn(window.history, 'replaceState');
+    const push = vi.spyOn(window.history, 'pushState');
+    sync.exit();
+    expect(replace).toHaveBeenCalledWith(null, '', '#/b/hq-tower/2');
+    expect(push).not.toHaveBeenCalled();
+    expect(store.getState().pending).toEqual({ scene: hq(2), pose: STAIR_LANDING, panelId: null });
+    commitNow();
+    sync.exit();
+    expect(replace).toHaveBeenLastCalledWith(null, '', '#/b/hq-tower');
+    commitNow();
+    sync.exit();
+    expect(push).toHaveBeenCalledWith(null, '', '#/world');
+    expect(store.getState().pending).toEqual({ scene: world, pose: exitPose('hq-tower'), panelId: null });
   });
 });

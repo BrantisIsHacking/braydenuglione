@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { BoxScore } from './boxscore/BoxScore';
 import { readEnv, type Env } from './routing/capability';
-import { needsStartScreen, parseRoute, resolveScreen, type Route } from './routing/routes';
+import { hashForRoute, needsStartScreen, parseRoute, resolveScreen, type Route } from './routing/routes';
 import { WorldBoundary } from './shell/WorldBoundary';
 import { StartScreen } from './shell/StartScreen';
 import { loadWorld } from './shell/loadWorld';
@@ -12,10 +12,13 @@ export { STARTED_KEY } from './shell/started';
 const World = lazy(() => loadWorld());
 const FAILURE = "Brayden's World couldn't start on this device — here's the box score.";
 
-/** Parse the current hash; the legacy #/arena alias is rewritten in place (no new history entry). */
+/** Parse the current hash; the legacy #/arena alias and non-canonical building hashes (bad or redundant floors) are rewritten in place (no new history entry). */
 function readRoute(): Route {
   const r = parseRoute(window.location.hash);
-  if (r.view === 'building' && r.legacy) window.history.replaceState(null, '', '#/b/gym');
+  if (r.view === 'building') {
+    const canonical = r.legacy ? '#/b/gym' : hashForRoute(r);
+    if (window.location.hash !== canonical) window.history.replaceState(null, '', canonical);
+  }
   return r;
 }
 

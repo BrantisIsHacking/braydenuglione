@@ -53,6 +53,7 @@ export const interests: Interest[] = [
   {
     id: 'movies',
     building: 'cinema',
+    pos: [-1.5, -10.5],
     title: 'Movies',
     oneLiner: 'Twelve favorites on the marquee. The original Star Wars trilogy and Cars started it all.',
     link: {

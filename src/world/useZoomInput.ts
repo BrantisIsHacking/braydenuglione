@@ -23,7 +23,7 @@ export function useZoomInput(ref: RefObject<HTMLElement>, store: WorldStore = us
     if (!el) return;
     const busy = () => {
       const s = store.getState();
-      return s.activeId !== null || s.mapOpen || s.phase !== 'idle';
+      return s.activeId !== null || s.mapOpen || s.elevatorOpen || s.phase !== 'idle';
     };
     const wheel = (e: WheelEvent) => {
       if (e.ctrlKey || !e.deltaY || busy()) return;
