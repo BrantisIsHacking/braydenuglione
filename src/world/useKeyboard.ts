@@ -50,7 +50,7 @@ export function useKeyboard(store: WorldStore = useWorld): void {
       } else if (c === 'KeyE' || c === 'Enter' || c === 'Space') {
         if (e.repeat) return;
         if (s.nearId) {
-          s.activate(s.nearId);
+          s.activate(s.nearId, s.nearFocus);
           e.preventDefault();
         } else if (s.padId === 'elevator') {
           s.openElevator();

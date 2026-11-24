@@ -204,3 +204,20 @@ describe('elevator keys', () => {
     expect(store.getState().activeId).toBe('robotics');
   });
 });
+
+describe('collection stops', () => {
+  it('E on a stop opens its panel focused on the item', () => {
+    const store = createWorldStore(null);
+    renderHook(() => useKeyboard(store));
+    const wrap = document.createElement('div');
+    wrap.tabIndex = -1;
+    wrap.setAttribute('data-world-focus', '');
+    document.body.appendChild(wrap);
+    wrap.focus();
+    act(() => store.getState().setProximity('games', 'games', 'Halo'));
+    key('keydown', 'KeyE');
+    expect(store.getState().activeId).toBe('games');
+    expect(store.getState().activeFocus).toBe('Halo');
+    wrap.remove();
+  });
+});

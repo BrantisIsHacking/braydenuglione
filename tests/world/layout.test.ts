@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildings } from '../../src/content/buildings';
 import { NORTH, SOUTH, SPAWN_POSE, type Rect } from '../../src/world/types';
 import {
-  MAP, LOTS, FOUNTAIN, DOOR_W, doorTrigger, exitPose, spotPose, worldColliders, worldDoors, reachable, E2E_LANES,
+  MAP, LOTS, FOUNTAIN, DOOR_W, DECOR_COLLIDERS, doorTrigger, exitPose, spotPose, worldColliders, worldDoors, reachable, E2E_LANES,
 } from '../../src/world/logic/layout';
 
 const hit = (a: Rect, b: Rect) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 && Math.abs(a.z - b.z) < (a.d + b.d) / 2;
@@ -51,11 +51,27 @@ describe('lots', () => {
   });
   it('colliders do not overlap each other or spawn', () => {
     const cs = worldColliders();
-    expect(cs).toHaveLength(19);
+    expect(cs).toHaveLength(19 + DECOR_COLLIDERS.length);
     expect(cs).toContainEqual(FOUNTAIN);
     for (let i = 0; i < cs.length; i++) {
       for (let j = i + 1; j < cs.length; j++) expect(hit(cs[i], cs[j])).toBe(false);
       expect(circleHits(SPAWN_POSE.x, SPAWN_POSE.z, 1, cs[i])).toBe(false);
+    }
+  });
+});
+
+describe('decor colliders', () => {
+  it('are in worldColliders and clear of doors, exit poses, lanes and spawn', () => {
+    expect(DECOR_COLLIDERS.length).toBeGreaterThanOrEqual(5);
+    for (const c of DECOR_COLLIDERS) {
+      expect(worldColliders()).toContainEqual(c);
+      for (const t of worldDoors()) expect(hit(c, t.rect)).toBe(false);
+      for (const l of lots) {
+        const p = l.door ? exitPose(l.id) : spotPose(l.id);
+        expect(circleHits(p.x, p.z, 0.9, c)).toBe(false);
+      }
+      for (const lane of E2E_LANES) expect(hit(c, lane)).toBe(false);
+      expect(circleHits(SPAWN_POSE.x, SPAWN_POSE.z, 1, c)).toBe(false);
     }
   });
 });

@@ -246,3 +246,28 @@ describe('elevator state', () => {
     expect(calls).toHaveBeenCalledTimes(3);
   });
 });
+
+describe('activeFocus', () => {
+  it('is set by openPanel, cleared by closePanel, a plain open and go', () => {
+    const store = createWorldStore(null);
+    store.getState().openPanel('games', 'Halo');
+    expect(store.getState().activeFocus).toBe('Halo');
+    store.getState().closePanel();
+    expect(store.getState().activeFocus).toBeNull();
+    store.getState().openPanel('games', 'Halo');
+    store.getState().openPanel('games');
+    expect(store.getState().activeFocus).toBeNull();
+    store.getState().openPanel('games', 'Halo');
+    store.getState().go({ scene: { kind: 'world' }, pose: null, panelId: null });
+    expect(store.getState().activeFocus).toBeNull();
+  });
+  it('setProximity is idempotent including focus', () => {
+    const store = createWorldStore(null);
+    store.getState().setProximity('games', 'games', 'Halo');
+    const a = store.getState();
+    store.getState().setProximity('games', 'games', 'Halo');
+    expect(store.getState()).toBe(a);
+    store.getState().setProximity('games', 'games', 'Fortnite');
+    expect(store.getState().nearFocus).toBe('Fortnite');
+  });
+});

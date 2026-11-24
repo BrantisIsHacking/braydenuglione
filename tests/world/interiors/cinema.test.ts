@@ -55,3 +55,13 @@ describe('cinema interior', () => {
     expect(seats.items.length).toBeGreaterThanOrEqual(2 * 6 * 9 * 2);
   });
 });
+
+describe('cinema poster focus', () => {
+  it('each poster stop focuses its film; the screen has no focus', async () => {
+    const { sceneGeometry } = await import('../../../src/world/interiors/cinema/geometry');
+    const { films } = await import('../../../src/content/films');
+    const ex = sceneGeometry('cinema').exhibits;
+    expect(ex.slice(0, 12).map((e) => e.focus)).toEqual(films.map((f) => f.title));
+    expect(ex[12].focus).toBeUndefined();
+  });
+});

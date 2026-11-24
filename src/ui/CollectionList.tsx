@@ -1,10 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { COLLECTION_LABEL, getCollection } from '../content/collections';
 import type { Book, CollectionId, Film, Game, Team } from '../content/types';
 import './exhibit.css';
 
 const LEAD = /^(the|a|an)\s+/i;
-const sortKey = (t: string) => t.trim().replace(LEAD, '').toLowerCase();
+export const titleSortKey = (t: string) => t.trim().replace(LEAD, '').toLowerCase();
+const sortKey = titleSortKey;
+const FOCUS_CLASS = 'collection__item--focus';
+
+/** Props for the one list item whose key is the focus: `aria-current` (not colour alone), a class, and a ref to scroll to. */
+function useFocusItem(focus: string | null | undefined) {
+  const ref = useRef<HTMLLIElement | null>(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({ block: 'center' });
+  }, [focus]);
+  return (key: string) => (focus != null && key === focus ? { ref, 'aria-current': 'true' as const, className: FOCUS_CLASS } : {});
+}
 
 export function sortBooks(list: readonly Book[]): Book[] {
   const favs = list.filter((b) => b.favorite);
@@ -18,9 +29,16 @@ export function filterBooks(list: readonly Book[], q: string): Book[] {
   return list.filter((b) => b.title.toLowerCase().includes(n) || b.author.toLowerCase().includes(n));
 }
 
-function BookList({ books }: { books: readonly Book[] }) {
+function BookList({ books, focus }: { books: readonly Book[]; focus?: string | null }) {
   const [q, setQ] = useState('');
-  const shown = filterBooks(sortBooks(books), q);
+  const [seen, setSeen] = useState(focus);
+  if (seen !== focus) {
+    // a new focus clears the filter so a hidden book is still shown (state adjusted during render, before commit)
+    setSeen(focus);
+    if (focus != null) setQ('');
+  }
+  const item = useFocusItem(focus);
+  const shown = filterBooks(sortBooks(books), seen !== focus ? '' : q);
   return (
     <>
       <div className="collection__filter">
@@ -36,7 +54,7 @@ function BookList({ books }: { books: readonly Book[] }) {
       </div>
       <ul className="collection__list collection__list--plain">
         {shown.map((b) => (
-          <li key={`${b.title}|${b.author}`}>
+          <li key={`${b.title}|${b.author}`} {...item(b.title)}>
             {b.favorite && <span className="collection__fav"><span aria-hidden="true">★ </span><span className="sr-only">Favorite: </span></span>}
             {b.title} <span className="collection__sub">by {b.author}</span>
           </li>
@@ -46,18 +64,19 @@ function BookList({ books }: { books: readonly Book[] }) {
   );
 }
 
-export function CollectionList({ id, items }: { id: CollectionId; items?: readonly unknown[] }) {
+export function CollectionList({ id, items, focus }: { id: CollectionId; items?: readonly unknown[]; focus?: string | null }) {
+  const item = useFocusItem(focus);
   const data = (items ?? getCollection(id)) as readonly unknown[];
   let body;
   switch (id) {
     case 'books':
-      body = <BookList books={data as readonly Book[]} />;
+      body = <BookList books={data as readonly Book[]} focus={focus} />;
       break;
     case 'films':
       body = (
         <ol className="collection__list">
           {(data as readonly Film[]).map((f) => (
-            <li key={`${f.title}|${f.year}`}>{`${f.title} (${f.year})`}</li>
+            <li key={`${f.title}|${f.year}`} {...item(f.title)}>{`${f.title} (${f.year})`}</li>
           ))}
         </ol>
       );
@@ -66,7 +85,7 @@ export function CollectionList({ id, items }: { id: CollectionId; items?: readon
       body = (
         <ul className="collection__list">
           {(data as readonly Game[]).map((g) => (
-            <li key={g.title}>{g.note ? `${g.title} — ${g.note}` : g.title}</li>
+            <li key={g.title} {...item(g.title)}>{g.note ? `${g.title} — ${g.note}` : g.title}</li>
           ))}
         </ul>
       );
@@ -75,7 +94,7 @@ export function CollectionList({ id, items }: { id: CollectionId; items?: readon
       body = (
         <ol className="collection__list">
           {(data as readonly string[]).map((a) => (
-            <li key={a}>{a}</li>
+            <li key={a} {...item(a)}>{a}</li>
           ))}
         </ol>
       );
@@ -88,7 +107,7 @@ export function CollectionList({ id, items }: { id: CollectionId; items?: readon
           <h4 className="collection__heading">{s}</h4>
           <ul className="collection__list">
             {teams.filter((t) => t.sport === s).map((t) => (
-              <li key={t.name}>{t.name}</li>
+              <li key={t.name} {...item(t.name)}>{t.name}</li>
             ))}
           </ul>
         </div>

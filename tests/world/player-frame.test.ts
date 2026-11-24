@@ -77,3 +77,15 @@ describe('pads', () => {
     expect(fired).toBe(1);
   });
 });
+
+describe('playerFrame focus', () => {
+  it('reports the focus of the in-reach stop, else null', () => {
+    const geo: SceneGeometry = { ...hall, exhibits: [{ id: 'games', pos: [0, -5], focus: 'Halo' }] };
+    const near = playerFrame({ x: 0, z: -3.5, heading: NORTH }, { x: 0, y: 0 }, DT, geo);
+    expect(near.nearId).toBe('games');
+    expect(near.nearFocus).toBe('Halo');
+    const far = playerFrame({ x: 0, z: 0, heading: NORTH }, { x: 0, y: 0 }, DT, geo);
+    expect(far.nearId).toBeNull();
+    expect(far.nearFocus).toBeNull();
+  });
+});

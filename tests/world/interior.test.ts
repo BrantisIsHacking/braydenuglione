@@ -35,7 +35,8 @@ describe('bespoke interior geometry', () => {
   it('placedIn filters by floor and rejects unplaced content', () => {
     expect(placedIn('hq-tower', 3).map((e) => e.id)).toEqual(['oculogica', 'ai-camp']);
     expect(placedIn('hq-tower')).toHaveLength(5);
-    expect(() => placedIn('library')).toThrow('missing pos: books');
+    // every bespoke building is now fully placed, so no content case remains for the 'missing pos' throw
+    expect(placedIn('library').map((e) => e.id)).toEqual(['books']);
   });
   it('names each failure mode', () => {
     const joined = (g: SceneGeometry) => interiorProblems(g).join('\n');

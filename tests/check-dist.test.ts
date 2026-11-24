@@ -137,7 +137,7 @@ describe('check-dist chunk groups', () => {
     expect(r.groups.some((x: { name: string }) => x.name === 'interior-gym')).toBe(true)
   })
   it('warns when a scene entry key is missing from the manifest', () => {
-    const stage2 = ['workshop', 'hq-tower', 'civic-center', 'campus-quad', 'hall-of-fame', 'cinema'].map((id) => `src/world/interiors/${id}/Interior.tsx`)
+    const stage2 = ['workshop', 'hq-tower', 'civic-center', 'campus-quad', 'hall-of-fame', 'cinema', 'library', 'arcade', 'record-store', 'playhouse', 'fan-shop', 'golf-clubhouse'].map((id) => `src/world/interiors/${id}/Interior.tsx`)
     expect(missingSceneEntries(manifest)).toEqual(['src/world/world/WorldScene.tsx', ...stage2])
     const r = checkDist(withManifest(manifest), TERMS)
     expect(r.errors).toEqual([])

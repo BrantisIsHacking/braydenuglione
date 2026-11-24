@@ -650,3 +650,59 @@ describe('history: elevator ride', () => {
     expect(store.getState().pending).toEqual({ scene: world, pose: exitPose('hq-tower'), panelId: null });
   });
 });
+
+describe('history: walk-in golf pad', () => {
+  const COURSE = { id: 'course', rect: { x: 0, z: -11.4, w: 2.4, d: 1.2 }, arrival: { x: 0, z: -2, heading: NORTH }, to: 2 };
+  const golfGeo: SceneGeometry = { ...geo, pads: [COURSE], floor: 1 };
+  let store: WorldStore;
+  let sync: ReturnType<typeof createHistorySync>;
+  beforeEach(() => {
+    window.history.pushState(null, '', '#/world');
+    store = createWorldStore(null);
+    sync = createHistorySync({ win: window, store, parse: parseRoute, exitPose, spotPose, toBoxScore: vi.fn() });
+  });
+  afterEach(() => {
+    sync.dispose();
+    vi.restoreAllMocks();
+  });
+  const commitNow = (g: SceneGeometry) => {
+    const s = store.getState();
+    const t = s.pending!;
+    if (s.phase === 'fading-out') s.beginLoad();
+    const floor = t.scene.kind === 'interior' ? (t.scene.floor ?? 1) : undefined;
+    const scene = t.scene.kind === 'interior' ? { ...t.scene, floor: floor! } : t.scene;
+    store.getState().commit(scene, { ...g, floor }, spawnPoseFor(t, g), t.panelId);
+    store.getState().settle();
+  };
+  it('the pad rides to the course by replaceState; exit comes back down, then leaves', () => {
+    window.history.replaceState(null, '', '#/b/golf-clubhouse');
+    sync.start();
+    commitNow(golfGeo);
+    const push = vi.spyOn(window.history, 'pushState');
+    const replace = vi.spyOn(window.history, 'replaceState');
+    sync.ride(2, { padId: 'course' });
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledWith(null, '', '#/b/golf-clubhouse/2');
+    expect(push).not.toHaveBeenCalled();
+    expect(store.getState().pending).toEqual({ scene: { kind: 'interior', id: 'golf-clubhouse', floor: 2 }, pose: { x: 0, z: -2, heading: NORTH }, panelId: null });
+    commitNow(golfGeo);
+    sync.exit();
+    expect(replace).toHaveBeenLastCalledWith(null, '', '#/b/golf-clubhouse');
+    expect(store.getState().pending?.pose).toEqual(STAIR_LANDING);
+    expect(push).not.toHaveBeenCalled();
+    commitNow(golfGeo);
+    sync.exit();
+    expect(push).toHaveBeenCalledWith(null, '', '#/world');
+  });
+  it('a panel opened with focus writes the plain hash; a re-request of the same panel drops the focus', () => {
+    window.history.replaceState(null, '', '#/b/arcade');
+    sync.start();
+    commitNow(golfGeo);
+    const replace = vi.spyOn(window.history, 'replaceState');
+    store.getState().openPanel('games', 'Halo');
+    expect(replace).toHaveBeenCalledWith(null, '', '#games');
+    sync.travel('#games');
+    expect(store.getState().activeFocus).toBeNull();
+    expect(store.getState().activeId).toBe('games');
+  });
+});

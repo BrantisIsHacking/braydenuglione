@@ -9,6 +9,10 @@ export type Phase = 'idle' | 'fading-out' | 'loading' | 'fading-in';
 export type WorldState = {
   activeId: string | null;
   nearId: string | null;
+  /** Collection key of the in-reach placement (stops). */
+  nearFocus: string | null;
+  /** Collection key the open panel highlights. */
+  activeFocus: string | null;
   nearestId: string | null;
   visited: string[];
   spawn: { pose: Pose; seq: number };
@@ -27,10 +31,10 @@ export type WorldState = {
   padId: string | null;
   toast: string | null;
   zoomIndex: ZoomIndex;
-  activate(id: string): void;
-  openPanel(id: string): void;
+  activate(id: string, focus?: string | null): void;
+  openPanel(id: string, focus?: string | null): void;
   closePanel(): void;
-  setProximity(nearestId: string | null, nearId: string | null): void;
+  setProximity(nearestId: string | null, nearId: string | null, nearFocus?: string | null): void;
   setFx(m: FxMode): void;
   setAvatar(s: 'loading' | 'model' | 'capsule'): void;
   go(target: Target, opts?: { instant?: boolean }): void;
@@ -61,6 +65,8 @@ export function createWorldStore(storage: Storage | null): WorldStore {
   return create<WorldState>((set, get) => ({
     activeId: null,
     nearId: null,
+    nearFocus: null,
+    activeFocus: null,
     nearestId: null,
     visited: loadVisited(storage, valid),
     spawn: { pose: { ...SPAWN_POSE }, seq: 0 },
@@ -78,25 +84,25 @@ export function createWorldStore(storage: Storage | null): WorldStore {
     toast: null,
     zoomIndex: 1,
     // SEAM: Phase 4 routes this through the shot sequence before openPanel.
-    activate: (id) => get().openPanel(id),
-    openPanel: (id) => {
+    activate: (id, focus) => get().openPanel(id, focus),
+    openPanel: (id, focus) => {
       if (!getExhibit(id)) return;
       const { visited } = get();
       if (visited.includes(id) || visited.length >= EXHIBIT_COUNT) {
-        set({ activeId: id });
+        set({ activeId: id, activeFocus: focus ?? null });
         return;
       }
       const next = [...visited, id];
-      set({ activeId: id, visited: next });
+      set({ activeId: id, activeFocus: focus ?? null, visited: next });
       saveVisited(storage, next);
     },
     closePanel: () => {
-      if (get().activeId !== null) set({ activeId: null });
+      if (get().activeId !== null || get().activeFocus !== null) set({ activeId: null, activeFocus: null });
     },
-    setProximity: (nearestId, nearId) => {
+    setProximity: (nearestId, nearId, nearFocus = null) => {
       const s = get();
-      if (s.nearestId === nearestId && s.nearId === nearId) return;
-      set({ nearestId, nearId });
+      if (s.nearestId === nearestId && s.nearId === nearId && s.nearFocus === nearFocus) return;
+      set({ nearestId, nearId, nearFocus });
     },
     setFx: (m) => {
       if (get().fx !== m) set({ fx: m });
@@ -107,7 +113,7 @@ export function createWorldStore(storage: Storage | null): WorldStore {
     go: (target, opts) => {
       const cur = get().phase;
       const phase: Phase = opts?.instant ? 'loading' : cur === 'idle' || cur === 'fading-in' ? 'fading-out' : cur;
-      set({ pending: target, phase, activeId: null, mapOpen: false, elevatorOpen: false });
+      set({ pending: target, phase, activeId: null, activeFocus: null, mapOpen: false, elevatorOpen: false });
     },
     beginLoad: () => {
       if (get().phase === 'fading-out') set({ phase: 'loading' });

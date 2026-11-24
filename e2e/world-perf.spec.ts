@@ -22,7 +22,7 @@ test.describe('draw-call budgets (desktop)', () => {
   const cases = [
     { name: 'world', hash: '#/world', scene: 'world', max: 200 },
     { name: 'gym', hash: '#/b/gym', scene: 'gym', max: 150 },
-    { name: 'generic hall', hash: '#/b/library', scene: 'library', max: 150 },
+    { name: 'library (bespoke)', hash: '#/b/library', scene: 'library', max: 150 },
   ]
   for (const fx of ['full', 'low'] as const) {
     for (const c of cases) {

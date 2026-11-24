@@ -39,29 +39,14 @@ export function massingFor(id: BuildingId): MassBox[] {
     case 'workshop':
       out.push(box(x - w / 2 + 1.2, h + 1.6, z, 1, 3.2, 1, 'slate'));
       break;
-    case 'library':
-      out.push(box(x, 2.4, south - 0.7, w * 0.55, 0.2, 1.4, 'offWhite'));
-      break;
-    case 'playhouse':
-      out.push(box(x, 3.6, south - 0.4, w * 0.6, 0.8, 0.8, 'cinemaRed'));
-      break;
     case 'cinema':
-      out.push(box(x - w / 2 + 1.8, 1.75, south - 0.15, 2.4, 3.5, 0.3, 'warmGlow'), box(x, 3.8, south - 0.15, w, 0.6, 0.3, 'cinemaRed'));
+      out.push(box(x, 5.4, south - 0.15, w, 0.2, 0.3, 'cinemaRed'));
       break;
     case 'record-store':
       out.push(box(x + w / 2 - 0.5, 2.6, south - 0.3, 0.4, 2.2, 0.6, 'warmGlow'));
       break;
-    case 'arcade':
-      out.push(box(x - w / 2 + 0.7, h / 2, south - 0.4, 0.8, h, 0.8, 'offWhite'), box(x, 3.5, south - 0.15, w, 0.6, 0.3, 'teal'));
-      break;
     case 'gym':
       out.push(box(x, h + 1.1, z, w * 0.8, 1.6, d * 0.8, 'gymRed'), box(x, 5.8, south - 0.15, w, 0.7, 0.3, 'gymRed'));
-      break;
-    case 'fan-shop':
-      out.push(box(x, 2.8, south - 0.6, w * 0.7, 0.2, 1.2, 'rack'));
-      break;
-    case 'golf-clubhouse':
-      out.push(box(x, 2.6, south - 0.6, w * 0.5, 0.2, 1.2, 'fairway'));
       break;
     default:
       break;

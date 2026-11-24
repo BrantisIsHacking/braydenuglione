@@ -31,6 +31,8 @@ export type PlayerFrame = {
   pad: string | null;
   nearestId: string | null;
   nearId: string | null;
+  /** Collection key of the in-reach placement, else null. */
+  nearFocus: string | null;
   labels: string[];
   prefetch: string[];
 };
@@ -39,13 +41,15 @@ export type PlayerFrame = {
 export function playerFrame(prev: Pose, input: MoveInput, dt: number, geo: SceneGeometry): PlayerFrame {
   const pose = step(prev, input, dt, geo);
   const near = nearest(pose, geo.exhibits);
+  const inRange = !!near && inReach(near.dist, geo.exits.length > 0 ? REACH_INTERIOR_M : REACH_M);
   return {
     pose,
     door: triggerAt(pose, geo.doors),
     exit: triggerAt(pose, geo.exits) !== null,
     pad: triggerAt(pose, geo.pads ?? []),
     nearestId: near ? near.id : null,
-    nearId: near && inReach(near.dist, geo.exits.length > 0 ? REACH_INTERIOR_M : REACH_M) ? near.id : null,
+    nearId: near && inRange ? near.id : null,
+    nearFocus: near && inRange ? (near.focus ?? null) : null,
     labels: nearestIds(pose, geo.exhibits, LABEL_COUNT),
     prefetch: within(pose, geo.doors, PREFETCH_RADIUS).filter((id) => getBuilding(id)?.kind === 'interior'),
   };
@@ -100,7 +104,7 @@ export function Player({
       const input = frozen ? NO_INPUT : combineInput(keysToInput(liveInput.pressed), joystickToInput(liveInput.joy));
       const f = playerFrame(prev, input, dt, geo);
       p = pose.current = f.pose;
-      st.setProximity(f.nearestId, f.nearId);
+      st.setProximity(f.nearestId, f.nearId, f.nearFocus);
       st.setLabels(f.labels);
       st.setPad(f.pad);
       const door = doorLatch.current.update(f.door);

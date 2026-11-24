@@ -6,7 +6,7 @@ import './exhibit.css';
 
 export { sortBooks, filterBooks } from './CollectionList';
 
-export function ExhibitContent({ exhibit, headingLevel }: { exhibit: Exhibit; headingLevel: 2 | 3 }) {
+export function ExhibitContent({ exhibit, headingLevel, focus }: { exhibit: Exhibit; headingLevel: 2 | 3; focus?: string | null }) {
   if (exhibit.type === 'station') return <StationContent station={exhibit.station} headingLevel={headingLevel} />;
   const H = `h${headingLevel}` as 'h2' | 'h3';
   if (exhibit.type === 'banner') {
@@ -31,7 +31,7 @@ export function ExhibitContent({ exhibit, headingLevel }: { exhibit: Exhibit; he
             <a href={i.link.url} target="_blank" rel="noopener noreferrer">{i.link.label}</a>
           </p>
         )}
-        {i.collection && <CollectionList id={i.collection} />}
+        {i.collection && <CollectionList id={i.collection} focus={focus} />}
       </article>
     );
   }

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { findPrivateTerm, loadPrivateTerms } from '../src/privacy/privateTerms.mjs';
 import {
   ALL_TEXT, PHONE_PATTERN, SIGN_ALLOW_LIST, EXHIBIT_COUNT, banners, buildings, exhibits, exhibitsIn, getBuilding,
-  getCollection, COLLECTION_LABEL, getExhibit, homeBuilding, interests, stations, floorsOf, isFloor,
+  getCollection, COLLECTION_LABEL, getExhibit, homeBuilding, interests, stations, floorsOf, isFloor, floorLabel, collectionKeys,
 } from '../src/content';
 import { mirrors } from '../src/content/mirrors';
 import { ROUTE_WORDS } from '../src/routing/routeWords';
@@ -98,8 +98,43 @@ describe('content model', () => {
     expect(gym.find((p) => p.exhibit.id === 'basketball')?.pos).toEqual([3, 5]);
     expect(gym.find((p) => p.exhibit.id === 'rising-star')).toMatchObject({ mirror: true, pos: [-3, -7] });
   });
-  it('stage-2 buildings are bespoke', () => {
-    expect(buildings.filter((b) => b.bespoke).map((b) => b.id).sort()).toEqual(['campus-quad', 'cinema', 'civic-center', 'gym', 'hall-of-fame', 'hq-tower', 'workshop']);
+  it('bespoke buildings', () => {
+    expect(buildings.filter((b) => b.bespoke).map((b) => b.id).sort()).toEqual(['arcade', 'campus-quad', 'cinema', 'civic-center', 'fan-shop', 'golf-clubhouse', 'gym', 'hall-of-fame', 'hq-tower', 'library', 'playhouse', 'record-store', 'workshop']);
+  });
+  it('stage-3 positions match the contract table', () => {
+    const POS: Record<string, [number, number]> = {
+      'library/books': [0, -8], 'arcade/rocket-league': [-7.5, -8], 'arcade/fifa': [-4.5, -8], 'arcade/games': [8.5, -3.5],
+      'record-store/music': [-4, -11], 'record-store/karaoke': [5.5, -10], 'playhouse/stranger-things': [0, -11],
+      'fan-shop/teams': [0, -6], 'golf-clubhouse/golf': [-4, -7],
+    };
+    const got: Record<string, [number, number]> = {};
+    for (const b of ['library', 'arcade', 'record-store', 'playhouse', 'fan-shop', 'golf-clubhouse'] as const)
+      for (const p of exhibitsIn(b)) if (p.pos) got[`${b}/${p.exhibit.id}`] = p.pos;
+    expect(got).toEqual(POS);
+  });
+  it('music links to Spotify', () => {
+    expect(interests.find((i) => i.id === 'music')?.link).toEqual({ label: 'Spotify', url: 'https://open.spotify.com/user/f1z0utspes4vydzqaubrp6o68' });
+  });
+  it('collection keys are unique and complete', () => {
+    const n = { books: 75, films: 12, games: 18, artists: 46, teams: 10 } as const;
+    for (const id of Object.keys(n) as (keyof typeof n)[]) {
+      const k = collectionKeys(id);
+      expect(k).toHaveLength(n[id]);
+      expect(new Set(k).size).toBe(k.length);
+    }
+    expect(collectionKeys('games')[0]).toBe('Rocket League');
+    expect(collectionKeys('teams')[4]).toBe('Manchester City');
+    expect(collectionKeys('artists')[8]).toBe('Tyler, The Creator');
+  });
+  it('golf is a two-floor building', () => {
+    expect(floorsOf('golf-clubhouse')).toEqual([
+      { n: 1, name: 'Clubhouse', sign: 'CLUBHOUSE', label: 'Clubhouse' },
+      { n: 2, name: 'Nine-hole course', sign: '9 HOLES', label: 'Course' },
+    ]);
+    expect(floorLabel('golf-clubhouse', 2)).toBe('Course');
+    expect(floorLabel('hq-tower', 3)).toBe('Floor 3');
+    expect(isFloor('golf-clubhouse', 2)).toBe(true);
+    expect(isFloor('golf-clubhouse', 3)).toBe(false);
   });
   it('authored positions match the contract table', () => {
     const POS: Record<string, [number, number]> = {
@@ -145,7 +180,11 @@ describe('content model', () => {
       expect(exhibitsIn('hq-tower').some((p) => !p.mirror && p.floor === f.n), `floor ${f.n}`).toBe(true);
   });
   it('signs use the allow-list or the Brayden prefix', () => {
-    expect(SIGN_ALLOW_LIST).toHaveLength(36);
+    expect(SIGN_ALLOW_LIST).toHaveLength(45);
+    for (const t of ['FAVORITES', 'STAGE', 'TOP 12', 'BOX OFFICE', 'JERSEYS', 'SCARVES', 'PRO SHOP', 'TO THE COURSE', '9 HOLES', '5K loop']) expect(SIGN_ALLOW_LIST).toContain(t);
+    expect(SIGN_ALLOW_LIST).not.toContain('5K LOOP');
+    expect(getBuilding('running-loop')?.sign).toBe('5K loop');
+    for (const f of floorsOf('golf-clubhouse')) expect(SIGN_ALLOW_LIST).toContain(f.sign);
     for (const s of ['ELEVATOR', 'FLOOR 1: IT ROOM', 'FLOOR 2: CODING DOJO', 'FLOOR 3: MED-ML LAB', 'FLOOR 4: AI LAB', 'LECTURE HALL', 'JUDGING HALL', 'CLASSROOM', 'TOUR DESK', 'MENTORSHIP BOARD', 'HONORS HALL', 'SCREENING ROOM', 'HIGH SCHOOL WING', 'ROBOTICS LAB', 'NOW SHOWING', 'TICKETS', 'CONCESSIONS', 'THEATER 1'])
       expect(SIGN_ALLOW_LIST).toContain(s);
     for (const f of floorsOf('hq-tower')) expect(SIGN_ALLOW_LIST).toContain(f.sign);

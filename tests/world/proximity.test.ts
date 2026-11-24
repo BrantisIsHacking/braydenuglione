@@ -21,3 +21,10 @@ describe('proximity', () => {
     expect(inReach(near.dist)).toBe(true);
   });
 });
+
+describe('proximity focus', () => {
+  it('carries the focus of the nearest placement', () => {
+    const r = nearest({ x: 0, z: 0 }, [{ id: 'games', pos: [0, -1], focus: 'Halo' }, { id: 'games', pos: [0, -5], focus: 'Halo 2' }]);
+    expect(r).toEqual({ id: 'games', dist: 1, focus: 'Halo' });
+  });
+});

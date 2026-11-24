@@ -85,7 +85,7 @@ export type HistorySync = {
   start(): void;
   travel(hash: string): void;
   /** Elevator or stairs: replaceState to another floor of the current building. */
-  ride(floor: number, opts?: { stairs?: boolean }): void;
+  ride(floor: number, opts?: { stairs?: boolean; padId?: string }): void;
   /** The south exit: stairs down on floors above 1, out of the building otherwise. */
   exit(): void;
   restore(): void;
@@ -178,6 +178,7 @@ export function createHistorySync(d: HistoryDeps): HistorySync {
     const p = plan(parseSafe(hash));
     if (p.kind === 'go') applyGo(p.target, false);
     else if (p.kind === 'panel') applyPanel(p.panelId);
+    else if (p.kind === 'none' && store.getState().activeFocus !== null) applyPanel(store.getState().activeId); // same panel re-requested: drop the stale focus
     // 'boxscore' is ignored here: App owns that screen switch.
   };
 
@@ -213,7 +214,7 @@ export function createHistorySync(d: HistoryDeps): HistorySync {
       } else if (p.kind === 'panel') {
         write('replace', hashFor(store.getState().scene, p.panelId));
         applyPanel(p.panelId);
-      }
+      } else if (p.kind === 'none' && store.getState().activeFocus !== null) applyPanel(store.getState().activeId);
     },
     ride(floor, opts) {
       const s = store.getState();
@@ -223,7 +224,7 @@ export function createHistorySync(d: HistoryDeps): HistorySync {
       s.closeElevator();
       const next: Scene = { kind: 'interior', id, floor };
       write('replace', hashForScene(next));
-      const pad = s.geometry?.pads?.find((p) => p.id === 'elevator');
+      const pad = s.geometry?.pads?.find((p) => p.id === (opts?.padId ?? 'elevator'));
       applyGo({ scene: next, pose: opts?.stairs ? STAIR_LANDING : (pad?.arrival ?? null), panelId: null }, false);
     },
     exit() {

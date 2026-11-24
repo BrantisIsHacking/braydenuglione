@@ -29,3 +29,19 @@ describe('Prompt / InteractButton on the elevator pad', () => {
 });
 import { fireEvent } from '@testing-library/react';
 import { InteractButton } from '../../src/world/ui/InteractButton';
+
+describe('Prompt / InteractButton with a collection focus', () => {
+  it('names the item, and the click opens the panel on it', () => {
+    const store = createWorldStore(null);
+    act(() => store.getState().setProximity('games', 'games', 'Halo'));
+    const { unmount } = render(<Prompt touch={false} store={store} />);
+    expect(screen.getByTestId('prompt')).toHaveTextContent('Press E — Arcade cabinets: Halo');
+    unmount();
+    const r2 = render(<Prompt touch store={store} />);
+    expect(screen.getByTestId('prompt')).toHaveTextContent('Tap to open — Arcade cabinets: Halo');
+    r2.unmount();
+    render(<InteractButton store={store} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open Arcade cabinets: Halo' }));
+    expect(store.getState().activeFocus).toBe('Halo');
+  });
+});

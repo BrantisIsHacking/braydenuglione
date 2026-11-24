@@ -3,6 +3,8 @@ import type { BuildingId } from '../../content/types';
 import { DIST_WORLD } from '../logic/camera';
 import { E2E_LANES, LOTS, MAP, doorTrigger, exitPose, spotPose, worldColliders, worldDoors } from '../logic/layout';
 import { mulberry32 } from '../logic/rng';
+import { exteriorParts } from './exteriors';
+import { spotParts } from './spots';
 import { SPAWN_POSE, type PlacedExhibit, type Rect, type SceneGeometry } from '../types';
 
 export const SPOT_EXHIBITS: { building: BuildingId; id: string }[] = [
@@ -48,12 +50,20 @@ function onPath(x: number, z: number): boolean {
   return Math.min(MAP.maxX - px, MAP.maxZ - pz) < LOOP_INSET + LOOP_WIDTH / 2 + 1.2;
 }
 
+/** Ground decals (putting green, park grass): trees stay off them. */
+function decalRects(): Rect[] {
+  return [...exteriorParts('golf-clubhouse'), ...spotParts('park')]
+    .filter((p) => p.sy <= 0.06 && p.sx > 1)
+    .map((p) => ({ x: p.x, z: p.z, w: p.sx, d: p.sz }));
+}
+
 export function treePositions(count = 40): [number, number][] {
   const rnd = mulberry32(29);
   const out: [number, number][] = [];
+  const decals = decalRects();
   for (let tries = 0; out.length < count && tries < 5000; tries++) {
     const x = MAP.minX + rnd() * (MAP.maxX - MAP.minX), z = MAP.minZ + rnd() * (MAP.maxZ - MAP.minZ);
-    if (propBlocked(x, z, 1.2) || onPath(x, z)) continue;
+    if (propBlocked(x, z, 1.2) || onPath(x, z) || decals.some((c) => circleHits(x, z, 1.2, c))) continue;
     if (out.some(([a, b]) => Math.hypot(a - x, b - z) < 4)) continue;
     out.push([+x.toFixed(2), +z.toFixed(2)]);
   }

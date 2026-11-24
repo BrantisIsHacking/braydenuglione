@@ -9,6 +9,12 @@ export const interiorLoaders: Partial<Record<BuildingId, () => Promise<SceneModu
   'campus-quad': () => import('./campus-quad/Interior'),
   'hall-of-fame': () => import('./hall-of-fame/Interior'),
   cinema: () => import('./cinema/Interior'),
+  library: () => import('./library/Interior'),
+  arcade: () => import('./arcade/Interior'),
+  'record-store': () => import('./record-store/Interior'),
+  playhouse: () => import('./playhouse/Interior'),
+  'fan-shop': () => import('./fan-shop/Interior'),
+  'golf-clubhouse': () => import('./golf-clubhouse/Interior'),
 };
 
 const cache = new Map<string, Promise<SceneModule>>();

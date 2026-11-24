@@ -60,9 +60,53 @@ export async function holdUntil(
   }
 }
 
-/** Whole-frame draw calls at frame 30 of the current scene (polls until the attribute is filled). */
+/**
+ * Whole-frame draw calls of the current scene, refreshed every 30 frames. Waits until the value is
+ * non-zero and unchanged across four reads 400 ms apart, so a half-built scene (lazy models, late
+ * instances) is never measured.
+ */
 export async function drawCalls(page: Page): Promise<number> {
   const read = async () => Number((await page.locator(WORLD).getAttribute('data-draw-calls')) || 0)
   await expect.poll(read, { timeout: 30_000 }).toBeGreaterThan(0)
-  return read()
+  let last = -1
+  let same = 0
+  await expect
+    .poll(async () => {
+      const cur = await read()
+      same = cur > 0 && cur === last ? same + 1 : 0
+      last = cur
+      await page.waitForTimeout(400)
+      return same
+    }, { timeout: 30_000 })
+    .toBeGreaterThanOrEqual(3)
+  return last
+}
+
+/** Waits for the transition to be idle and the pose to stop changing (two equal `data-pose` reads 200 ms apart). */
+export async function settle(page: Page): Promise<void> {
+  await expect(page.locator(WORLD)).toHaveAttribute('data-transition', 'idle')
+  let prev = ''
+  await expect
+    .poll(async () => {
+      const cur = (await page.locator(WORLD).getAttribute('data-pose')) ?? ''
+      const same = cur !== '' && cur === prev
+      prev = cur
+      await page.waitForTimeout(200)
+      return same
+    }, { timeout: 10_000 })
+    .toBe(true)
+}
+
+/** Walks to (x, z) with the arrow keys: x first, then z, each released within `tol` metres. Walls and props may stop you short. */
+export async function walkTo(page: Page, x: number, z: number, tol = 0.35): Promise<void> {
+  const p0 = await pose(page)
+  if (Math.abs(x - p0.x) > tol) {
+    const right = x > p0.x
+    await holdUntil(page, right ? 'ArrowRight' : 'ArrowLeft', `(p) => ${right ? `p.x >= ${x - tol}` : `p.x <= ${x + tol}`}`)
+  }
+  const p1 = await pose(page)
+  if (Math.abs(z - p1.z) > tol) {
+    const down = z > p1.z
+    await holdUntil(page, down ? 'ArrowDown' : 'ArrowUp', `(p) => ${down ? `p.z >= ${z - tol}` : `p.z <= ${z + tol}`}`)
+  }
 }

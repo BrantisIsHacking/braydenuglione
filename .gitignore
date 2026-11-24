@@ -10,3 +10,5 @@ playwright-report/
 .superpowers/
 *.local
 *.tsbuildinfo
+
+*.slbk

@@ -97,3 +97,12 @@ describe('Hud floors and elevator prompt', () => {
     expect(store.getState().elevatorOpen).toBe(true);
   });
 });
+
+describe('Hud floor labels', () => {
+  it.each([['golf-clubhouse', 2, 'Golf Clubhouse · Course'], ['golf-clubhouse', 1, 'Golf Clubhouse · Clubhouse'], ['hq-tower', 3, 'HQ Tower · Floor 3']] as const)('%s floor %i reads %s', (id, floor, text) => {
+    const store = createWorldStore(null);
+    store.setState({ scene: { kind: 'interior', id, floor } });
+    render(<Hud store={store} />);
+    expect(screen.getByText(text)).toBeInTheDocument();
+  });
+});

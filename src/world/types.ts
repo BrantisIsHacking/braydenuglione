@@ -15,8 +15,8 @@ export function inFront(pos: [number, number]): Pose {
 export type Scene = { kind: 'world' } | { kind: 'interior'; id: BuildingId; floor?: number };
 export type Target = { scene: Scene; pose: Pose | null; panelId: string | null };
 export type Trigger = { id: string; rect: Rect };
-export type PlacedExhibit = { id: string; pos: [number, number] };
-export type Pad = Trigger & { arrival: Pose };
+export type PlacedExhibit = { id: string; pos: [number, number]; /** collection key the panel opens on */ focus?: string };
+export type Pad = Trigger & { arrival: Pose; /** walk-in pad: ride straight to this floor */ to?: number };
 export type SceneGeometry = { bounds: Bounds; colliders: Rect[]; doors: Trigger[]; exits: Trigger[]; exhibits: PlacedExhibit[]; entrance: Pose; cameraDistance: number; /** Interiors: metres the view may run past the south wall (default 2). Smaller pushes the room down the screen. */ cameraSouthPad?: number; pads?: Pad[]; /** Resolved floor of a multi-floor interior. */ floor?: number };
 export type SceneProps = { buildingId: BuildingId | null; theme: Theme; reducedMotion: boolean; spawnAt: Pose | null; floor?: number };
 export type SceneModule = { default: ComponentType<SceneProps>; sceneGeometry(id: BuildingId | null, floor?: number): SceneGeometry };

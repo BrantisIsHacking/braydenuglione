@@ -26,7 +26,7 @@ export function ReadySignal({ target, sceneKey }: { target: RefObject<HTMLElemen
     if (!el) return;
     frames.current += 1;
     const n = frames.current;
-    if (n === 30) el.dataset.drawCalls = String(gl.info.render.calls);
+    if (n >= 30 && n % 30 === 0) el.dataset.drawCalls = String(gl.info.render.calls);
     gl.info.reset();
     if (n === 1) {
       el.dataset.ready = 'true';

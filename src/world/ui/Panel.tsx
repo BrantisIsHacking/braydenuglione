@@ -15,6 +15,7 @@ function isTyping(el: Element | null): boolean {
 
 export function Panel({ store = useWorld }: { store?: WorldStore } = {}) {
   const activeId = store((s) => s.activeId);
+  const activeFocus = store((s) => s.activeFocus);
   const closePanel = store((s) => s.closePanel);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -72,7 +73,7 @@ export function Panel({ store = useWorld }: { store?: WorldStore } = {}) {
           <span aria-hidden="true">&times;</span>
         </button>
         <div ref={bodyRef} className="world-panel__body" tabIndex={0}>
-          <ExhibitContent exhibit={exhibit} headingLevel={2} />
+          <ExhibitContent exhibit={exhibit} headingLevel={2} focus={activeFocus} />
         </div>
       </div>
     </div>

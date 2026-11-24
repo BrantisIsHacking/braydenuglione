@@ -32,7 +32,7 @@ export type Station = {
 };
 export type Banner = { id: string; title: string; issuer: string; year: string; why: string; building: 'hall-of-fame'; pos?: [number, number] };
 export type CollectionId = 'books'|'films'|'games'|'artists'|'teams';
-export type Interest = { id: string; building: BuildingId; title: string; oneLiner: string; detail?: string; link?: Link; collection?: CollectionId; pos?: [number, number] };
+export type Interest = { id: string; building: BuildingId; title: string; oneLiner: string; detail?: string; scorecard?: string[]; link?: Link; collection?: CollectionId; pos?: [number, number] };
 export type Mirror = { exhibitId: string; building: BuildingId; pos?: [number, number]; floor?: number };
 export type Book = { title: string; author: string; favorite?: boolean };
 export type Film = { title: string; year: number; onDisplay?: boolean };

@@ -21,6 +21,8 @@ describe('scene registry', () => {
 
   it('loads the generic interior and the world, memoised per key', async () => {
     const r = await fresh();
+    // every building is bespoke now; the generic hall is the data-only fallback for an id with no loader
+    delete r.interiorLoaders.library;
     const a = r.loadScene({ kind: 'interior', id: 'library' });
     expect(await a).toMatchObject({ default: generic.default });
     expect(r.loadScene({ kind: 'interior', id: 'library' })).toBe(a);

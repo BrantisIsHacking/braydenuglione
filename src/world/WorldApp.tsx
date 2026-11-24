@@ -8,6 +8,7 @@ import { createHistorySync } from './history';
 import { resetLiveInput } from './liveInput';
 import { forcedFx } from './logic/fx';
 import { exitPose, spotPose } from './logic/layout';
+import { padAction } from './logic/pads';
 import { effectiveTheme, theme } from './look/theme';
 import { useWorld } from './store';
 import { CameraRig } from './scene/CameraRig';
@@ -82,9 +83,11 @@ export default function WorldApp({ env }: WorldAppProps) {
     };
     const onExit = () => sync.exit();
     const onPad = (id: string) => {
-      if (id === 'elevator') useWorld.getState().openElevator();
+      const a = padAction(useWorld.getState().geometry?.pads ?? [], id);
+      if (a?.kind === 'ride') sync.ride(a.floor, { padId: a.padId });
+      else if (a?.kind === 'elevator') useWorld.getState().openElevator();
     };
-    return { sync, toBoxScore, onDoor, onExit, onPad, ride: (floor: number) => sync.ride(floor), travel: (h: string) => sync.travel(h), restore: () => sync.restore() };
+    return { sync, toBoxScore, onDoor, onExit, onPad, ride: (floor: number, opts?: { stairs?: boolean; padId?: string }) => sync.ride(floor, opts), travel: (h: string) => sync.travel(h), restore: () => sync.restore() };
   });
 
   useEffect(() => {

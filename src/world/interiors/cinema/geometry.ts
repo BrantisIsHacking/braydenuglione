@@ -9,7 +9,7 @@ export { SPEC };
 export function stops(): PlacedExhibit[] {
   const base = bespokeGeometry('cinema', SPEC).exhibits; // movies (first poster stop), critics-choice
   const screen = base.find((e) => e.id === 'critics-choice')!;
-  return [...posterSlots().map((p) => ({ id: 'movies', pos: p.stop })), screen];
+  return [...posterSlots().map((p) => ({ id: 'movies', pos: p.stop, focus: p.film.title })), screen];
 }
 
 export function sceneGeometry(_id?: BuildingId | null): SceneGeometry {

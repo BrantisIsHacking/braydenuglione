@@ -5,10 +5,11 @@ import { Lighting } from '../scene/Lighting';
 import { useWorld } from '../store';
 import type { SceneProps } from '../types';
 import { Ground } from './Ground';
+import { Exteriors } from './ExteriorMeshes';
 import { Massing } from './MassingMeshes';
 import { Props } from './Props';
 import { SignBoards } from './SignBoards';
-import { Spots } from './Spots';
+import { Spots } from './SpotMeshes';
 import { SPOT_EXHIBITS, sceneGeometry } from './geometry';
 
 export { sceneGeometry };
@@ -31,11 +32,13 @@ function Markers({ reducedMotion }: { reducedMotion: boolean }) {
 }
 
 export default function WorldScene({ theme, reducedMotion }: SceneProps) {
+  const fx = useWorld((s) => s.fx);
   return (
     <>
       <Lighting theme={theme} preset="daylight" />
       <Ground />
       <Massing />
+      <Exteriors still={reducedMotion || fx === 'low'} />
       <DoorFrames doors={geo.doors} />
       <SignBoards />
       <Props />

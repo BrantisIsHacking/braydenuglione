@@ -55,8 +55,15 @@ export function exitPose(id: BuildingId): Pose {
   return spotPose(id);
 }
 
+/** Park furniture that must block walking: chess-park benches and hedges, the roundnet bench. Mirrors world/spots.ts parts. */
+export const DECOR_COLLIDERS: Rect[] = [
+  R(20.7, 4, 0.5, 1.4), R(23.3, 4, 0.5, 1.4),
+  R(22, 2.7, 4.4, 0.5), R(19.8, 4.025, 0.5, 2.15), R(24.2, 4.025, 0.5, 2.15),
+  R(38.3, 4, 0.5, 1.4),
+];
+
 export function worldColliders(): Rect[] {
-  return [...table.map((l) => l.rect), FOUNTAIN];
+  return [...table.map((l) => l.rect), FOUNTAIN, ...DECOR_COLLIDERS];
 }
 
 export function worldDoors(): Trigger[] {

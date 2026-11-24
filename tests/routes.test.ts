@@ -87,3 +87,12 @@ describe('floor routes', () => {
     expect(hashForRoute(hq)).toBe('#/b/hq-tower')
   })
 })
+
+describe('golf floor routes', () => {
+  const golf = { view: 'building', id: 'golf-clubhouse', legacy: false } as const
+  it('floor 2 is the course; bad floors land on the clubhouse', () => {
+    expect(parseRoute('#/b/golf-clubhouse/2')).toEqual({ ...golf, floor: 2 })
+    for (const h of ['#/b/golf-clubhouse/3', '#/b/golf-clubhouse/0', '#/b/golf-clubhouse/x'])
+      expect('floor' in parseRoute(h)).toBe(false)
+  })
+})

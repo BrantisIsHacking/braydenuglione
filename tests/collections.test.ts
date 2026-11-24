@@ -33,7 +33,9 @@ describe('collections', () => {
     expect(games).toHaveLength(18);
     expect(games[0].title).toBe('Rocket League');
     expect(games.some((g) => g.title.includes('FIFA 23'))).toBe(false);
-    expect(artists).toHaveLength(12);
+    expect(artists).toHaveLength(46);
+    expect(artists[43]).toBe('Rihanna');
+    expect(artists[45]).toBe('deadmau5');
     expect(artists[0]).toBe('Drake');
     expect(artists[11]).toBe('Tame Impala');
     expect(teams).toHaveLength(10);

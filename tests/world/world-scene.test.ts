@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildings, SIGN_ALLOW_LIST } from '../../src/content/buildings';
 import { isFontSafe } from '../../src/world/logic/fontSafe';
-import { E2E_LANES, LOTS, doorTrigger, worldColliders, worldDoors } from '../../src/world/logic/layout';
+import { DECOR_COLLIDERS, E2E_LANES, LOTS, doorTrigger, worldColliders, worldDoors } from '../../src/world/logic/layout';
 import { lampPositions, propBlocked, sceneGeometry, treePositions } from '../../src/world/world/geometry';
 import { massingFor } from '../../src/world/world/massing';
 import { worldSigns } from '../../src/world/world/signs';
@@ -36,6 +36,14 @@ describe('world scene data', () => {
     }
     expect(total).toBeLessThanOrEqual(18 * 4);
     expect(massingFor('hq-tower')[0].h).toBe(14);
+  });
+  it('trees avoid decor colliders', () => {
+    for (const [x, z] of treePositions()) {
+      for (const c of DECOR_COLLIDERS) {
+        const dx = Math.max(Math.abs(x - c.x) - c.w / 2, 0), dz = Math.max(Math.abs(z - c.z) - c.d / 2, 0);
+        expect(dx * dx + dz * dz).toBeGreaterThanOrEqual(1.2 * 1.2);
+      }
+    }
   });
   it('trees and lamps are clear of colliders, doors and lanes', () => {
     const trees = treePositions(), lamps = lampPositions();
